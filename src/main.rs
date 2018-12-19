@@ -29,6 +29,10 @@ struct Options {
     #[structopt(short = "p", long)]
     max_price: Option<Cents>,
 
+    /// Display no meals containing the specified allergens
+    #[structopt(short, long)]
+    allergens: Vec<String>,
+
     /// Display a given date's menu
     #[structopt(short, long, parse(try_from_str = "parse_iso_date"))]
     date: Option<NaiveDate>,
@@ -94,7 +98,11 @@ fn filter_menu(options: &Options, menu: MenuResponse) -> MenuResponse {
         } else {
             meal.tags.iter().any(|tag| options.tags.contains(tag))
         };
-        price_ok && colors_ok && tags_ok
+        let allergens_ok = !meal
+            .allergens
+            .iter()
+            .any(|allergen| options.allergens.contains(allergen));
+        price_ok && colors_ok && tags_ok && allergens_ok
     }
 
     let mut groups = Vec::new();
