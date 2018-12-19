@@ -1,11 +1,11 @@
 #![feature(try_from)]
-extern crate scraper;
-extern crate regex;
 extern crate ansi_term;
+extern crate regex;
+extern crate scraper;
 
-use std::fmt;
 use std::collections;
 use std::convert::TryFrom;
+use std::fmt;
 
 mod utility {
     pub fn partition<A, P, I>(predicate: P, xs: I) -> (Vec<A>, Vec<A>)
@@ -66,7 +66,6 @@ impl From<scraper::html::Html> for MenuResponse {
     }
 }
 
-
 #[derive(Debug)]
 struct MealGroup {
     name: String,
@@ -78,9 +77,9 @@ impl fmt::Display for MealGroup {
         writeln!(
             f,
             "{}",
-            ansi_term::Style::new().bold().paint(
-                &self.name.to_uppercase(),
-            )
+            ansi_term::Style::new()
+                .bold()
+                .paint(&self.name.to_uppercase(),)
         );
         for meal in &self.meals {
             write!(f, "{}", meal);
@@ -150,11 +149,10 @@ impl From<scraper::ElementRef<'_>> for Meal {
         let meal_name_selector = scraper::Selector::parse("span.bold").unwrap();
         let allergen_selector = scraper::Selector::parse(".toolt").unwrap();
 
-        let icons_html = html.select(&icon_selector).map(|img| {
-            img.value().attr("src").expect("Icon has no src")
-        });
-        let (color_htmls, tag_htmls) =
-            utility::partition(|&src| src.contains("ampel"), icons_html);
+        let icons_html = html
+            .select(&icon_selector)
+            .map(|img| img.value().attr("src").expect("Icon has no src"));
+        let (color_htmls, tag_htmls) = utility::partition(|&src| src.contains("ampel"), icons_html);
         let color = MealColor::from(color_htmls[0]);
         let tags = tag_htmls.iter().map(|&src| MealTag::from(src)).collect();
         let meal_name = html
@@ -265,9 +263,7 @@ impl TryFrom<scraper::ElementRef<'_>> for MealPrice {
                 .trim()
                 .replace(",", ".")
                 .split("/")
-                .map(|p| {
-                    Cents::from_euro(p.parse::<f32>().expect("Could not parse price"))
-                })
+                .map(|p| Cents::from_euro(p.parse::<f32>().expect("Could not parse price")))
                 .collect();
             Ok(MealPrice {
                 student: prices[0].clone(),

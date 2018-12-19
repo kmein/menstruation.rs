@@ -1,6 +1,6 @@
 #![feature(try_from)]
-extern crate reqwest;
 extern crate chrono;
+extern crate reqwest;
 mod lib;
 
 struct MenuQuery {
@@ -17,22 +17,17 @@ fn menu_html(
 ) -> reqwest::Result<reqwest::Response> {
     reqwest::Client::new()
         .post("https://www.stw.berlin/xhr/speiseplan-wochentag.html")
-        .form(
-            &[
-                ("week", "now"),
-                ("date", &date.format("%Y-%m-%d").to_string()),
-                ("resources_id", &mensa_code.0.to_string()),
-            ],
-        )
+        .form(&[
+            ("week", "now"),
+            ("date", &date.format("%Y-%m-%d").to_string()),
+            ("resources_id", &mensa_code.0.to_string()),
+        ])
         .header(reqwest::header::USER_AGENT, "Mozilla/5.0")
         .send()
 }
 
 fn main() {
-    let mut response = menu_html(
-        chrono::Local::today(),
-        MensaCode(191),
-    ).unwrap();
+    let mut response = menu_html(chrono::Local::today(), MensaCode(191)).unwrap();
     assert!(response.status().is_success());
 
     let menu_response = lib::extract(&response.text().unwrap());
