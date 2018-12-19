@@ -2,7 +2,6 @@
 extern crate chrono;
 extern crate menstruation;
 extern crate reqwest;
-#[macro_use]
 extern crate structopt;
 
 use chrono::{Local, NaiveDate, ParseError};
@@ -59,19 +58,20 @@ impl FromStr for MensaCode {
     }
 }
 
-fn menu_html(mensa_code: &MensaCode, menu_date: Option<NaiveDate>) -> reqwest::Result<Response> {
+fn menu_html(options: &Options) -> reqwest::Result<Response> {
     Client::new()
         .post("https://www.stw.berlin/xhr/speiseplan-wochentag.html")
         .form(&[
             ("week", "now"),
             (
                 "date",
-                &menu_date
-                    .unwrap_or(Local::today().naive_local())
+                &options
+                    .date
+                    .unwrap_or_else(|| Local::today().naive_local())
                     .format("%Y-%m-%d")
                     .to_string(),
             ),
-            ("resources_id", &mensa_code.0.to_string()),
+            ("resources_id", &options.mensa.0.to_string()),
         ])
         .header(header::USER_AGENT, "Mozilla/5.0")
         .send()
@@ -88,20 +88,13 @@ fn filter_menu(options: &Options, menu: MenuResponse) -> MenuResponse {
         } else {
             true
         };
-        let colors_ok = if options.colors.is_empty() {
-            true
-        } else {
-            options.colors.contains(&meal.color)
-        };
-        let tags_ok = if options.tags.is_empty() {
-            true
-        } else {
-            meal.tags.iter().any(|tag| options.tags.contains(tag))
-        };
-        let allergens_ok = !meal
+        let colors_ok = options.colors.is_empty() || options.colors.contains(&meal.color);
+        let tags_ok =
+            options.tags.is_empty() || meal.tags.iter().any(|tag| options.tags.contains(tag));
+        let allergens_ok = meal
             .allergens
             .iter()
-            .any(|allergen| options.allergens.contains(allergen));
+            .all(|allergen| !options.allergens.contains(allergen));
         price_ok && colors_ok && tags_ok && allergens_ok
     }
 
@@ -122,7 +115,7 @@ fn filter_menu(options: &Options, menu: MenuResponse) -> MenuResponse {
 fn main() {
     let options = Options::from_args();
 
-    let mut response = menu_html(&options.mensa, options.date).unwrap();
+    let mut response = menu_html(&options).unwrap();
     assert!(response.status().is_success());
 
     let menu_response = extract(&response.text().unwrap());
