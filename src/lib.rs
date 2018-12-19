@@ -1,10 +1,11 @@
+#![feature(try_from)]
 extern crate scraper;
 extern crate regex;
 extern crate ansi_term;
 
 use std::fmt;
 use std::collections;
-
+use std::convert::TryFrom;
 
 mod utility {
     pub fn partition<A, P, I>(predicate: P, xs: I) -> (Vec<A>, Vec<A>)
@@ -57,6 +58,15 @@ impl fmt::Display for MenuResponse {
     }
 }
 
+impl From<scraper::html::Html> for MenuResponse {
+    fn from(html: scraper::html::Html) -> Self {
+        let group_selector = scraper::Selector::parse(".splGroupWrapper").unwrap();
+        let groups = html.select(&group_selector).map(MealGroup::from).collect();
+        MenuResponse { groups }
+    }
+}
+
+
 #[derive(Debug)]
 struct MealGroup {
     name: String,
@@ -77,6 +87,24 @@ impl fmt::Display for MealGroup {
         }
         writeln!(f, "");
         Ok(())
+    }
+}
+
+impl From<scraper::ElementRef<'_>> for MealGroup {
+    fn from(html: scraper::ElementRef<'_>) -> Self {
+        let group_name_selector = scraper::Selector::parse(".splGroup").unwrap();
+        let meal_selector = scraper::Selector::parse(".splMeal").unwrap();
+
+        let group_name = html
+            .select(&group_name_selector)
+            .next()
+            .expect("No group name found")
+            .inner_html();
+        let meals = html.select(&meal_selector).map(Meal::from).collect();
+        MealGroup {
+            name: group_name,
+            meals,
+        }
     }
 }
 
@@ -113,6 +141,53 @@ impl fmt::Display for Meal {
                 .collect::<Vec<_>>()
                 .join(" ")
         )
+    }
+}
+
+impl From<scraper::ElementRef<'_>> for Meal {
+    fn from(html: scraper::ElementRef<'_>) -> Self {
+        let icon_selector = scraper::Selector::parse("img.splIcon").unwrap();
+        let meal_name_selector = scraper::Selector::parse("span.bold").unwrap();
+        let allergen_selector = scraper::Selector::parse(".toolt").unwrap();
+
+        let icons_html = html.select(&icon_selector).map(|img| {
+            img.value().attr("src").expect("Icon has no src")
+        });
+        let (color_htmls, tag_htmls) =
+            utility::partition(|&src| src.contains("ampel"), icons_html);
+        let color = MealColor::from(color_htmls[0]);
+        let tags = tag_htmls.iter().map(|&src| MealTag::from(src)).collect();
+        let meal_name = html
+            .select(&meal_name_selector)
+            .next()
+            .expect("No meal name found")
+            .inner_html()
+            .trim()
+            .to_string();
+        let price = MealPrice::try_from(html).ok();
+        let allergens = {
+            let parenthesized = regex::Regex::new(r"\((.*)\)").unwrap();
+            let allergens_html = html
+                .select(&allergen_selector)
+                .next()
+                .expect("No allergens found")
+                .inner_html();
+            if let Some(captures) = parenthesized.captures(&allergens_html) {
+                String::from(&captures[1])
+                    .split(", ")
+                    .map(String::from)
+                    .collect()
+            } else {
+                collections::HashSet::new()
+            }
+        };
+        Meal {
+            name: meal_name,
+            tags,
+            color,
+            price,
+            allergens,
+        }
     }
 }
 
@@ -179,87 +254,32 @@ struct MealPrice {
     guest: Cents,
 }
 
-pub fn extract_response(html: &str) -> Result<MenuResponse, &str> {
-    let groups_selector = scraper::Selector::parse(".splGroupWrapper").unwrap();
-    let group_name_selector = scraper::Selector::parse(".splGroup").unwrap();
-    let meal_selector = scraper::Selector::parse(".splMeal").unwrap();
-    let icon_selector = scraper::Selector::parse("img.splIcon").unwrap();
-    let meal_name_selector = scraper::Selector::parse("span.bold").unwrap();
-    let price_selector = scraper::Selector::parse("div.text-right").unwrap();
-    let allergen_selector = scraper::Selector::parse(".toolt").unwrap();
-
-    let dom = scraper::Html::parse_fragment(html);
-
-    let mut groups = Vec::new();
-    for group_html in dom.select(&groups_selector) {
-        let group_name = group_html
-            .select(&group_name_selector)
-            .next()
-            .expect("No group name found")
-            .inner_html();
-        let mut meals = Vec::new();
-        for meal_html in group_html.select(&meal_selector) {
-            let icons_html = meal_html.select(&icon_selector).map(|img| {
-                img.value().attr("src").expect("Icon has no src")
-            });
-            let (color_htmls, tag_htmls) =
-                utility::partition(|&src| src.contains("ampel"), icons_html);
-            let color = MealColor::from(color_htmls[0]);
-            let tags = tag_htmls.iter().map(|&src| MealTag::from(src)).collect();
-            let meal_name = meal_html
-                .select(&meal_name_selector)
-                .next()
-                .expect("No meal name found")
+impl TryFrom<scraper::ElementRef<'_>> for MealPrice {
+    type Error = ();
+    fn try_from(html: scraper::ElementRef<'_>) -> Result<Self, ()> {
+        let price_selector = scraper::Selector::parse("div.text-right").unwrap();
+        if let Some(price_raw) = html.select(&price_selector).next() {
+            let prices: Vec<_> = price_raw
                 .inner_html()
+                .replace("€", "")
                 .trim()
-                .to_string();
-            let price = if let Some(price_raw) = meal_html.select(&price_selector).next() {
-                let prices: Vec<_> = price_raw
-                    .inner_html()
-                    .replace("€", "")
-                    .trim()
-                    .replace(",", ".")
-                    .split("/")
-                    .map(|p| {
-                        Cents::from_euro(p.parse::<f32>().expect("Could not parse price"))
-                    })
-                    .collect();
-                Some(MealPrice {
-                    student: prices[0].clone(),
-                    employee: prices[1].clone(),
-                    guest: prices[2].clone(),
+                .replace(",", ".")
+                .split("/")
+                .map(|p| {
+                    Cents::from_euro(p.parse::<f32>().expect("Could not parse price"))
                 })
-            } else {
-                None
-            };
-            let allergens = {
-                let parenthesized = regex::Regex::new(r"\((.*)\)").unwrap();
-                let allergens_html = meal_html
-                    .select(&allergen_selector)
-                    .next()
-                    .expect("No allergens found")
-                    .inner_html();
-                if let Some(captures) = parenthesized.captures(&allergens_html) {
-                    String::from(&captures[1])
-                        .split(", ")
-                        .map(String::from)
-                        .collect()
-                } else {
-                    collections::HashSet::new()
-                }
-            };
-            meals.push(Meal {
-                name: meal_name,
-                tags,
-                color,
-                price,
-                allergens,
-            });
+                .collect();
+            Ok(MealPrice {
+                student: prices[0].clone(),
+                employee: prices[1].clone(),
+                guest: prices[2].clone(),
+            })
+        } else {
+            Err(())
         }
-        groups.push(MealGroup {
-            name: group_name,
-            meals,
-        });
     }
-    Ok(MenuResponse { groups })
+}
+
+pub fn extract(html: &str) -> MenuResponse {
+    MenuResponse::from(scraper::html::Html::parse_fragment(html))
 }

@@ -1,3 +1,4 @@
+#![feature(try_from)]
 extern crate reqwest;
 extern crate chrono;
 mod lib;
@@ -34,7 +35,7 @@ fn main() {
     ).unwrap();
     assert!(response.status().is_success());
 
-    let menu_response = lib::extract_response(&response.text().unwrap()).unwrap();
+    let menu_response = lib::extract(&response.text().unwrap());
 
     println!("{}", menu_response);
 }
