@@ -5,6 +5,8 @@ authors = ["Kierán Meinhardt <kieran.meinhardt@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+regex = "1"
 reqwest = "0.9.5"
 scraper = "0.9.0"
-term-painter = "0.2.4"
+ansi_term = "0.11.0"
+chrono = "0.4.6"
