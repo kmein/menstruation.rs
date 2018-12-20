@@ -2,18 +2,24 @@
 extern crate ansi_term;
 extern crate regex;
 extern crate scraper;
+extern crate serde;
+
+#[macro_use]
+extern crate serde_derive;
 
 mod utility;
 
 use ansi_term::{Colour, Style};
+use chrono::{Local, NaiveDate};
 use regex::Regex;
+use reqwest::{header, Client, Response};
 use scraper::{html::Html, ElementRef, Selector};
 use std::collections::HashSet;
 use std::convert::TryFrom;
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Serialize, Deserialize)]
 pub struct Cents(u64);
 
 impl Cents {
@@ -41,7 +47,7 @@ impl FromStr for Cents {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct MenuResponse(pub Vec<MealGroup>);
 
 impl Display for MenuResponse {
@@ -62,7 +68,7 @@ impl From<Html> for MenuResponse {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct MealGroup {
     pub name: String,
     pub meals: Vec<Meal>,
@@ -100,7 +106,7 @@ impl From<ElementRef<'_>> for MealGroup {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Meal {
     pub name: String,
     pub color: MealColor,
@@ -186,10 +192,13 @@ impl From<ElementRef<'_>> for Meal {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum MealColor {
+    #[serde(rename = "green")]
     Green,
+    #[serde(rename = "yellow")]
     Yellow,
+    #[serde(rename = "red")]
     Red,
 }
 
@@ -217,12 +226,17 @@ fn parse_color(uri: &str) -> Option<MealColor> {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum MealTag {
+    #[serde(rename = "vegetarian")]
     Vegetarian,
+    #[serde(rename = "vegan")]
     Vegan,
+    #[serde(rename = "organic")]
     Organic,
+    #[serde(rename = "sustainable fishing")]
     SustainableFishing,
+    #[serde(rename = "climate")]
     ClimateFriendly,
 }
 
@@ -270,7 +284,7 @@ fn parse_tag(uri: &str) -> Option<MealTag> {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct MealPrice {
     pub student: Cents,
     employee: Cents,
@@ -301,6 +315,46 @@ impl TryFrom<ElementRef<'_>> for MealPrice {
     }
 }
 
-pub fn extract(html: &str) -> MenuResponse {
-    MenuResponse::from(Html::parse_fragment(html))
+#[derive(Debug)]
+pub struct MensaCode(u16);
+
+impl Display for MensaCode {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl FromStr for MensaCode {
+    type Err = std::num::ParseIntError;
+    fn from_str(string: &str) -> Result<Self, Self::Err> {
+        match string.parse() {
+            Ok(number) => Ok(MensaCode(number)),
+            Err(err) => Err(err),
+        }
+    }
+}
+
+
+pub fn get_menu(mensa: &MensaCode, date: &Option<NaiveDate>) -> Result<MenuResponse, reqwest::Error> {
+    match Client::new()
+        .post("https://www.stw.berlin/xhr/speiseplan-wochentag.html")
+        .form(&[
+            ("week", "now"),
+            (
+                "date",
+                &date.uwrap_or_else(|| Local::today().naive_local())
+                    .format("%Y-%m-%d")
+                    .to_string(),
+            ),
+            ("resources_id", &mensa.0.to_string()),
+        ])
+        .header(header::USER_AGENT, "Mozilla/5.0")
+        .send()
+    {
+        Ok(mut response) => {
+            assert!(response.status().is_success());
+            Ok(MenuResponse::from(Html::parse_fragment(&response.text().unwrap())))
+        }
+        Err(e) => Err(e),
+    }
 }
