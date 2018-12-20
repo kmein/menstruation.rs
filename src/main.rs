@@ -96,8 +96,11 @@ fn filter_menu(options: &Options, menu: MenuResponse) -> MenuResponse {
             true
         };
         let colors_ok = options.colors.is_empty() || options.colors.contains(&meal.color);
-        let tags_ok =
-            options.tags.is_empty() || meal.tags.iter().any(|tag| options.tags.contains(tag));
+        let tags_ok = options.tags.is_empty()
+            || meal.tags.iter().any(|tag| {
+                options.tags.contains(tag)
+                    || (tag == &MealTag::Vegan && options.tags.contains(&MealTag::Vegetarian))
+            });
         let allergens_ok = meal
             .allergens
             .iter()
