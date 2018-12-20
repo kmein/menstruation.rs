@@ -342,7 +342,7 @@ pub fn get_menu(mensa: &MensaCode, date: &Option<NaiveDate>) -> Result<MenuRespo
             ("week", "now"),
             (
                 "date",
-                &date.uwrap_or_else(|| Local::today().naive_local())
+                &date.unwrap_or_else(|| Local::today().naive_local())
                     .format("%Y-%m-%d")
                     .to_string(),
             ),
