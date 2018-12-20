@@ -36,6 +36,11 @@ impl From<std::num::ParseIntError> for Error {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct MensaCode(pub u16);
 
+impl From<u16> for MensaCode {
+    fn from(code: u16) -> Self {
+        MensaCode(code)
+    }
+}
 impl Display for MensaCode {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         write!(f, "{}", self.0)
