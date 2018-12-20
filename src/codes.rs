@@ -1,5 +1,5 @@
-use super::{MensaCode, NamedGroup, Response};
-use ansi_term::{Colour, Style};
+use super::{Group, MensaCode, Response};
+use ansi_term::{Color, Style};
 use regex::Regex;
 use reqwest::{header, Client};
 use scraper::{html::Html, ElementRef, Selector};
@@ -8,23 +8,22 @@ use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 
 impl TryFrom<Html> for Response<Mensa> {
-    type Error = std::option::NoneError;
+    type Error = super::Error;
     fn try_from(html: Html) -> Result<Self, Self::Error> {
         let group_selector = Selector::parse("#itemsHochschulen .container-fluid").unwrap();
         let groups = html
             .select(&group_selector)
-            .map(NamedGroup::try_from)
+            .map(Group::try_from)
             .collect::<Result<Vec<_>, _>>()?;
         Ok(Response(groups))
     }
 }
 
-impl TryFrom<ElementRef<'_>> for NamedGroup<Mensa> {
-    type Error = std::option::NoneError;
+impl TryFrom<ElementRef<'_>> for Group<Mensa> {
+    type Error = super::Error;
     fn try_from(html: ElementRef<'_>) -> Result<Self, Self::Error> {
-        let group_name_selector = Selector::parse(".h4").unwrap();
+        let group_name_selector = Selector::parse("h4").unwrap();
         let mensa_selector = Selector::parse(".row.row-top-percent-1.ptr[onclick]").unwrap();
-
         let name = html
             .select(&group_name_selector)
             .next()?
@@ -35,7 +34,7 @@ impl TryFrom<ElementRef<'_>> for NamedGroup<Mensa> {
             .select(&mensa_selector)
             .map(Mensa::try_from)
             .collect::<Result<Vec<_>, _>>()?;
-        Ok(NamedGroup {
+        Ok(Group {
             name,
             items: mensas,
         })
@@ -45,34 +44,50 @@ impl TryFrom<ElementRef<'_>> for NamedGroup<Mensa> {
 #[derive(Serialize, Deserialize)]
 pub struct Mensa {
     code: MensaCode,
+    pub name: String,
     address: String,
 }
 
 impl Display for Mensa {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-        write!(
+        writeln!(
             f,
             "{:4} {}",
-            self.code,
-            Style::new().italic().paint(&self.address)
+            Color::Green.paint(&self.code.to_string()),
+            Style::new().italic().paint(&self.name),
         )
     }
 }
 
 impl TryFrom<ElementRef<'_>> for Mensa {
-    type Error = std::option::NoneError;
+    type Error = super::Error;
     fn try_from(html: ElementRef<'_>) -> Result<Self, Self::Error> {
-        let address_selector = Selector::parse("addrcard").unwrap();
-
-        let code = MensaCode::from_str(html.value().attr("onclick")?).ok()?; // [9:12]
+        let address_selector = Selector::parse(".addrcard").unwrap();
+        let name_selector = Selector::parse("a.dummy div").unwrap();
+        let code = MensaCode::from_str({
+            let in_call = Regex::new(r"xhrLoad\('(\d+)'\)").unwrap();
+            let onclick = html.value().attr("onclick")?;
+            &in_call.captures(&onclick)?[1]
+        })?;
+        let name = html
+            .select(&address_selector)
+            .next()?
+            .select(&name_selector)
+            .next()?
+            .inner_html();
         let address = html
             .select(&address_selector)
             .next()?
-            .inner_html()
-            .trim()
-            .replace('\n', " /")
-            .replace(r"\s+", " ");
-        Ok(Mensa { code, address })
+            .text()
+            .skip(2)
+            .map(|t| t.trim())
+            .collect::<Vec<_>>()
+            .join(", ");
+        Ok(Mensa {
+            code,
+            name,
+            address,
+        })
     }
 }
 

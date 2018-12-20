@@ -1,4 +1,4 @@
-pub fn partition<A, P>(predicate: P, xs: &Vec<A>) -> (Vec<&A>, Vec<&A>)
+pub fn partition<A, P>(predicate: P, xs: &[A]) -> (Vec<&A>, Vec<&A>)
 where
     P: Fn(&A) -> bool,
 {

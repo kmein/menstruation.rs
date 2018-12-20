@@ -1,5 +1,5 @@
 use super::utility;
-use super::{MensaCode, NamedGroup, Response};
+use super::{Group, MensaCode, Response};
 use ansi_term::{Colour, Style};
 use chrono::{Local, NaiveDate};
 use regex::Regex;
@@ -39,19 +39,19 @@ impl FromStr for Cents {
 }
 
 impl TryFrom<Html> for Response<Meal> {
-    type Error = std::option::NoneError;
+    type Error = super::Error;
     fn try_from(html: Html) -> Result<Self, Self::Error> {
         let group_selector = Selector::parse(".splGroupWrapper").unwrap();
         let groups = html
             .select(&group_selector)
-            .map(NamedGroup::try_from)
+            .map(Group::try_from)
             .collect::<Result<Vec<_>, _>>()?;
         Ok(Response(groups))
     }
 }
 
-impl TryFrom<ElementRef<'_>> for NamedGroup<Meal> {
-    type Error = std::option::NoneError;
+impl TryFrom<ElementRef<'_>> for Group<Meal> {
+    type Error = super::Error;
     fn try_from(html: ElementRef<'_>) -> Result<Self, Self::Error> {
         let group_name_selector = Selector::parse(".splGroup").unwrap();
         let meal_selector = Selector::parse(".splMeal").unwrap();
@@ -61,7 +61,7 @@ impl TryFrom<ElementRef<'_>> for NamedGroup<Meal> {
             .select(&meal_selector)
             .map(Meal::try_from)
             .collect::<Result<Vec<_>, _>>()?;
-        Ok(NamedGroup { name, items: meals })
+        Ok(Group { name, items: meals })
     }
 }
 
@@ -102,7 +102,7 @@ impl Display for Meal {
 }
 
 impl TryFrom<ElementRef<'_>> for Meal {
-    type Error = std::option::NoneError;
+    type Error = super::Error;
     fn try_from(html: ElementRef<'_>) -> Result<Self, Self::Error> {
         let icon_selector = Selector::parse("img[src].splIcon").unwrap();
         let meal_name_selector = Selector::parse("span.bold").unwrap();
@@ -277,28 +277,7 @@ impl TryFrom<ElementRef<'_>> for Price {
     }
 }
 
-pub fn filter<P, Item>(menu: Response<Item>, predicate: P) -> Response<Item>
-where
-    P: Fn(&Item) -> bool,
-{
-    let mut groups = Vec::new();
-    for group in menu.0 {
-        let meals = group
-            .items
-            .into_iter()
-            .filter(&predicate)
-            .collect::<Vec<_>>();
-        if !meals.is_empty() {
-            groups.push(NamedGroup {
-                items: meals,
-                ..group
-            });
-        }
-    }
-    Response(groups)
-}
-
-pub fn get(mensa: &MensaCode, date: &Option<NaiveDate>) -> Result<Response<Meal>, String> {
+pub fn get(mensa: &MensaCode, date: Option<NaiveDate>) -> Result<Response<Meal>, String> {
     match Client::new()
         .post("https://www.stw.berlin/xhr/speiseplan-wochentag.html")
         .form(&[
