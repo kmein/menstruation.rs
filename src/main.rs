@@ -6,8 +6,6 @@ extern crate structopt;
 
 use menstruation::*;
 use chrono::{Local, NaiveDate, ParseError};
-use std::fmt::{Display, Formatter};
-use std::str::FromStr;
 use structopt::StructOpt;
 
 #[derive(StructOpt, Debug)]

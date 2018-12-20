@@ -333,7 +333,7 @@ impl Display for MensaCode {
 impl FromStr for MensaCode {
     type Err = std::num::ParseIntError;
     fn from_str(string: &str) -> Result<Self, Self::Err> {
-        match string.parse() {
+        match string.parse::<u16>() {
             Ok(number) => Ok(MensaCode::from(number)),
             Err(err) => Err(err),
         }
