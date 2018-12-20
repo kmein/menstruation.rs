@@ -318,6 +318,12 @@ impl TryFrom<ElementRef<'_>> for MealPrice {
 #[derive(Debug)]
 pub struct MensaCode(u16);
 
+impl From<u16> for MensaCode {
+    fn from(code: u16) -> Self {
+        MensaCode(code)
+    }
+}
+
 impl Display for MensaCode {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         write!(f, "{}", self.0)
@@ -328,7 +334,7 @@ impl FromStr for MensaCode {
     type Err = std::num::ParseIntError;
     fn from_str(string: &str) -> Result<Self, Self::Err> {
         match string.parse() {
-            Ok(number) => Ok(MensaCode(number)),
+            Ok(number) => Ok(MensaCode::from(number)),
             Err(err) => Err(err),
         }
     }
