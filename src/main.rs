@@ -7,6 +7,7 @@ extern crate structopt;
 use chrono::{Local, NaiveDate, ParseError};
 use menstruation::*;
 use reqwest::{header, Client, Response};
+use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 use structopt::StructOpt;
 
@@ -47,6 +48,12 @@ fn parse_iso_date(string: &str) -> Result<NaiveDate, ParseError> {
 
 #[derive(Debug)]
 struct MensaCode(u16);
+
+impl Display for MensaCode {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
 
 impl FromStr for MensaCode {
     type Err = std::num::ParseIntError;
@@ -115,10 +122,18 @@ fn filter_menu(options: &Options, menu: MenuResponse) -> MenuResponse {
 fn main() {
     let options = Options::from_args();
 
-    let mut response = menu_html(&options).unwrap();
-    assert!(response.status().is_success());
-
-    let menu_response = extract(&response.text().unwrap());
-
-    println!("{}", filter_menu(&options, menu_response));
+    if let Ok(mut response) = menu_html(&options) {
+        assert!(response.status().is_success());
+        let menu_response = extract(&response.text().unwrap());
+        println!("{}", filter_menu(&options, menu_response));
+    } else {
+        eprintln!(
+            "Kein Speiseplan gefunden für Mensa {} am {}.",
+            options.mensa,
+            options
+                .date
+                .unwrap_or_else(|| Local::today().naive_local())
+                .format("%d.%m.%Y")
+        );
+    }
 }
