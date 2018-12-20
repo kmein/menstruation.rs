@@ -4,8 +4,8 @@ extern crate menstruation;
 extern crate reqwest;
 extern crate structopt;
 
-use menstruation::*;
 use chrono::{Local, NaiveDate, ParseError};
+use menstruation::{codes, menu, MensaCode, Response};
 use structopt::StructOpt;
 
 #[derive(StructOpt, Debug)]
@@ -16,15 +16,15 @@ use structopt::StructOpt;
 struct Options {
     /// Display only meals with the specified colors
     #[structopt(short, long, parse(try_from_str))]
-    colors: Vec<MealColor>,
+    colors: Vec<menu::Color>,
 
     /// Display only meals with the specified tags
     #[structopt(short, long, parse(try_from_str))]
-    tags: Vec<MealTag>,
+    tags: Vec<menu::Tag>,
 
     /// Display no meals more expensive than a given price
     #[structopt(short = "p", long)]
-    max_price: Option<Cents>,
+    max_price: Option<menu::Cents>,
 
     /// Display no meals containing the specified allergens
     #[structopt(short, long)]
@@ -43,8 +43,8 @@ fn parse_iso_date(string: &str) -> Result<NaiveDate, ParseError> {
     NaiveDate::parse_from_str(string, "%Y-%m-%d")
 }
 
-fn filter_menu(options: &Options, menu: MenuResponse) -> MenuResponse {
-    fn matches_query(options: &Options, meal: &Meal) -> bool {
+fn query(options: &Options, menu: Response<menu::Meal>) -> Response<menu::Meal> {
+    menu::filter(menu, |meal| {
         let price_ok = if let Some(max) = &options.max_price {
             if let Some(price) = &meal.price {
                 price.student <= *max
@@ -58,34 +58,21 @@ fn filter_menu(options: &Options, menu: MenuResponse) -> MenuResponse {
         let tags_ok = options.tags.is_empty()
             || meal.tags.iter().any(|tag| {
                 options.tags.contains(tag)
-                    || (tag == &MealTag::Vegan && options.tags.contains(&MealTag::Vegetarian))
+                    || (tag == &menu::Tag::Vegan && options.tags.contains(&menu::Tag::Vegetarian))
             });
         let allergens_ok = meal
             .allergens
             .iter()
             .all(|allergen| !options.allergens.contains(allergen));
         price_ok && colors_ok && tags_ok && allergens_ok
-    }
-
-    let mut groups = Vec::new();
-    for group in menu.0 {
-        let meals = group
-            .meals
-            .into_iter()
-            .filter(|meal| matches_query(options, meal))
-            .collect::<Vec<_>>();
-        if !meals.is_empty() {
-            groups.push(MealGroup { meals, ..group });
-        }
-    }
-    MenuResponse(groups)
+    })
 }
 
 fn main() {
     let options = Options::from_args();
 
-    if let Ok(menu_response) = get_menu(&options.mensa, &options.date) {
-        println!("{}", filter_menu(&options, menu_response));
+    if let Ok(menu_response) = menu::get(&options.mensa, &options.date) {
+        println!("{}", query(&options, menu_response));
     } else {
         eprintln!(
             "Kein Speiseplan gefunden für Mensa {} am {}.",
