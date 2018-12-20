@@ -1,4 +1,4 @@
-#![feature(try_from)]
+#![feature(try_from, try_trait)]
 extern crate ansi_term;
 extern crate regex;
 extern crate scraper;
@@ -12,7 +12,7 @@ mod utility;
 use ansi_term::{Colour, Style};
 use chrono::{Local, NaiveDate};
 use regex::Regex;
-use reqwest::{header, Client, Response};
+use reqwest::{header, Client};
 use scraper::{html::Html, ElementRef, Selector};
 use std::collections::HashSet;
 use std::convert::TryFrom;
@@ -60,11 +60,12 @@ impl Display for MenuResponse {
     }
 }
 
-impl From<Html> for MenuResponse {
-    fn from(html: Html) -> Self {
+impl TryFrom<Html> for MenuResponse {
+    type Error = std::option::NoneError;
+    fn try_from(html: Html) -> Result<Self, Self::Error> {
         let group_selector = Selector::parse(".splGroupWrapper").unwrap();
-        let groups = html.select(&group_selector).map(MealGroup::from).collect();
-        MenuResponse(groups)
+        let groups = html.select(&group_selector).map(MealGroup::try_from).collect::<Result<Vec<_>,_>>()?;
+        Ok(MenuResponse(groups))
     }
 }
 
@@ -88,21 +89,21 @@ impl Display for MealGroup {
     }
 }
 
-impl From<ElementRef<'_>> for MealGroup {
-    fn from(html: ElementRef<'_>) -> Self {
+impl TryFrom<ElementRef<'_>> for MealGroup {
+    type Error = std::option::NoneError;
+    fn try_from(html: ElementRef<'_>) -> Result<Self, Self::Error> {
         let group_name_selector = Selector::parse(".splGroup").unwrap();
         let meal_selector = Selector::parse(".splMeal").unwrap();
 
         let group_name = html
             .select(&group_name_selector)
-            .next()
-            .expect("No group name found")
+            .next()?
             .inner_html();
-        let meals = html.select(&meal_selector).map(Meal::from).collect();
-        MealGroup {
+        let meals = html.select(&meal_selector).map(Meal::try_from).collect::<Result<Vec<_>,_>>()?;
+        Ok(MealGroup {
             name: group_name,
             meals,
-        }
+        })
     }
 }
 
@@ -142,17 +143,19 @@ impl Display for Meal {
     }
 }
 
-impl From<ElementRef<'_>> for Meal {
-    fn from(html: ElementRef<'_>) -> Self {
+impl TryFrom<ElementRef<'_>> for Meal {
+    type Error = std::option::NoneError;
+    fn try_from(html: ElementRef<'_>) -> Result<Self, Self::Error> {
         let icon_selector = Selector::parse("img.splIcon").unwrap();
         let meal_name_selector = Selector::parse("span.bold").unwrap();
         let allergen_selector = Selector::parse(".toolt").unwrap();
 
         let icons_html = html
             .select(&icon_selector)
-            .map(|img| img.value().attr("src").expect("Icon has no src"));
-        let (color_htmls, tag_htmls) = utility::partition(|&src| src.contains("ampel"), icons_html);
-        let color = parse_color(color_htmls[0]).expect("Unknown color icon");
+            .map(|img| img.value().attr("src"))
+            .collect::<Option<Vec<_>>>()?;
+        let (color_htmls, tag_htmls) = utility::partition(|&src| src.contains("ampel"), &icons_html);
+        let color = parse_color(color_htmls[0])?;
         let tags = tag_htmls
             .iter()
             .map(|&src| parse_tag(src))
@@ -182,13 +185,13 @@ impl From<ElementRef<'_>> for Meal {
                 HashSet::new()
             }
         };
-        Meal {
+        Ok(Meal {
             name: meal_name,
             tags,
             color,
             price,
             allergens,
-        }
+        })
     }
 }
 
@@ -341,7 +344,7 @@ impl FromStr for MensaCode {
 }
 
 
-pub fn get_menu(mensa: &MensaCode, date: &Option<NaiveDate>) -> Result<MenuResponse, reqwest::Error> {
+pub fn get_menu(mensa: &MensaCode, date: &Option<NaiveDate>) -> Result<MenuResponse, String> {
     match Client::new()
         .post("https://www.stw.berlin/xhr/speiseplan-wochentag.html")
         .form(&[
@@ -359,8 +362,11 @@ pub fn get_menu(mensa: &MensaCode, date: &Option<NaiveDate>) -> Result<MenuRespo
     {
         Ok(mut response) => {
             assert!(response.status().is_success());
-            Ok(MenuResponse::from(Html::parse_fragment(&response.text().unwrap())))
+            match MenuResponse::try_from(Html::parse_fragment(&response.text().unwrap())) {
+                Ok(menu) => Ok(menu),
+                Err(e) => Err(format!("{:?}", e))
+            }
         }
-        Err(e) => Err(e),
+        Err(e) => Err(format!("{:?}", e)),
     }
 }
