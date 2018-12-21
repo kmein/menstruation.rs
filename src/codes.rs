@@ -52,8 +52,8 @@ impl Display for Mensa {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         writeln!(
             f,
-            "{:4} {}",
-            Color::Green.paint(&self.code.to_string()),
+            "{} {}",
+            Color::Green.paint(format!("{:>4}", &self.code.to_string())),
             Style::new().italic().paint(&self.name),
         )
     }

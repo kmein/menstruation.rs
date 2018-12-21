@@ -92,7 +92,13 @@ impl Display for Meal {
         writeln!(
             f,
             "[{}] {} {}",
-            format!("{}", match &self.price { None => 0.into(), Some(p) => p.student }),
+            format!(
+                "{}",
+                match &self.price {
+                    None => 0.into(),
+                    Some(p) => p.student,
+                }
+            ),
             to_ansi(&self.color).paint(&self.name),
             self.tags
                 .iter()
@@ -267,7 +273,7 @@ impl TryFrom<ElementRef<'_>> for Price {
             .replace(",", ".")
             .split('/')
             .map(|p| p.parse::<f32>().map(Cents::from_euro))
-            .collect::<Result<Vec<_>,_>>()?;
+            .collect::<Result<Vec<_>, _>>()?;
         Ok(Price {
             student: prices[0].clone(),
             employee: prices[1].clone(),
