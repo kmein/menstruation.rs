@@ -69,15 +69,9 @@ impl TryFrom<ElementRef<'_>> for Mensa {
             let onclick = html.value().attr("onclick")?;
             &in_call.captures(&onclick)?[1]
         })?;
-        let name = html
-            .select(&address_selector)
-            .next()?
-            .select(&name_selector)
-            .next()?
-            .inner_html();
-        let address = html
-            .select(&address_selector)
-            .next()?
+        let address_html = html.select(&address_selector).next()?;
+        let name = address_html.select(&name_selector).next()?.inner_html();
+        let address = address_html
             .text()
             .skip(2)
             .map(|t| t.trim())
