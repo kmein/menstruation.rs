@@ -10,12 +10,18 @@ use std::convert::TryFrom;
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Hash, Serialize, Deserialize)]
 pub struct Cents(u64);
 
 impl Cents {
     fn from_euro(euro: f32) -> Self {
         Cents((euro * 100f32) as u64)
+    }
+}
+
+impl From<u64> for Cents {
+    fn from(cents: u64) -> Self {
+        Cents(cents)
     }
 }
 
@@ -86,11 +92,7 @@ impl Display for Meal {
         writeln!(
             f,
             "[{}] {} {}",
-            if let Some(price) = &self.price {
-                format!("{}", price.student)
-            } else {
-                "      ".to_string()
-            },
+            format!("{}", match &self.price { None => 0.into(), Some(p) => p.student }),
             to_ansi(&self.color).paint(&self.name),
             self.tags
                 .iter()
@@ -254,26 +256,23 @@ pub struct Price {
 }
 
 impl TryFrom<ElementRef<'_>> for Price {
-    type Error = ();
-    fn try_from(html: ElementRef<'_>) -> Result<Self, ()> {
+    type Error = super::Error;
+    fn try_from(html: ElementRef<'_>) -> Result<Self, Self::Error> {
         let price_selector = Selector::parse("div.text-right").unwrap();
-        if let Some(price_raw) = html.select(&price_selector).next() {
-            let prices: Vec<_> = price_raw
-                .inner_html()
-                .replace("€", "")
-                .trim()
-                .replace(",", ".")
-                .split('/')
-                .map(|p| Cents::from_euro(p.parse::<f32>().expect("Could not parse price")))
-                .collect();
-            Ok(Price {
-                student: prices[0].clone(),
-                employee: prices[1].clone(),
-                guest: prices[2].clone(),
-            })
-        } else {
-            Err(())
-        }
+        let price_raw = html.select(&price_selector).next()?;
+        let prices: Vec<_> = price_raw
+            .inner_html()
+            .replace("€", "")
+            .trim()
+            .replace(",", ".")
+            .split('/')
+            .map(|p| p.parse::<f32>().map(Cents::from_euro))
+            .collect::<Result<Vec<_>,_>>()?;
+        Ok(Price {
+            student: prices[0].clone(),
+            employee: prices[1].clone(),
+            guest: prices[2].clone(),
+        })
     }
 }
 

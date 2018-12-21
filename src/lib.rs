@@ -19,6 +19,7 @@ use std::str::FromStr;
 pub enum Error {
     None(std::option::NoneError),
     ParseInt(std::num::ParseIntError),
+    ParseFloat(std::num::ParseFloatError),
 }
 
 impl From<std::option::NoneError> for Error {
@@ -30,6 +31,12 @@ impl From<std::option::NoneError> for Error {
 impl From<std::num::ParseIntError> for Error {
     fn from(error: std::num::ParseIntError) -> Self {
         Error::ParseInt(error)
+    }
+}
+
+impl From<std::num::ParseFloatError> for Error {
+    fn from(error: std::num::ParseFloatError) -> Self {
+        Error::ParseFloat(error)
     }
 }
 
