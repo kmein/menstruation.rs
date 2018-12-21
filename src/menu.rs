@@ -275,9 +275,9 @@ impl TryFrom<ElementRef<'_>> for Price {
             .map(|p| p.parse::<f32>().map(Cents::from_euro))
             .collect::<Result<Vec<_>, _>>()?;
         Ok(Price {
-            student: prices[0].clone(),
-            employee: prices[1].clone(),
-            guest: prices[2].clone(),
+            student: prices[0],
+            employee: prices[1],
+            guest: prices[2],
         })
     }
 }
