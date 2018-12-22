@@ -1,4 +1,4 @@
-# menstruation.rs
+# menstruation.rs [![Build Status](https://travis-ci.org/kmein/menstruation.rs.svg?branch=master)](https://travis-ci.org/kmein/menstruation.rs)
 Schluss mit Frustration! _Regel_ dein Essen mit `menstruation`!
 
 Stell dir vor, du studierst in Berlin und möchtest wissen, was es heute in deiner Mensa gibt.
