@@ -1,5 +1,4 @@
-# menstruation.rs [![Build Status](https://travis-ci.org/kmein/menstruation.rs.svg?branch=master)](https://travis-ci.org/kmein/menstruation.rs) ![](https://img.shields.io/badge/menstruation-Regel%20dein%20Essen.-red.svg)
-Schluss mit Frustration! _Regel_ dein Essen mit `menstruation`!
+# ![Menstruation. Regel dein Essen.](https://img.shields.io/badge/menstruation-Regel%20dein%20Essen.-red.svg?style=for-the-badge) [![Build Status](https://travis-ci.org/kmein/menstruation.rs.svg?branch=master)](https://travis-ci.org/kmein/menstruation.rs)
 
 Stell dir vor, du studierst in Berlin und möchtest wissen, was es heute in deiner Mensa gibt.
 Du möchtest aber
