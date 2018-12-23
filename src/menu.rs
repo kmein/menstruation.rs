@@ -51,7 +51,8 @@ impl TryFrom<Html> for Response<Meal> {
         let groups = html
             .select(&group_selector)
             .map(Group::try_from)
-            .collect::<Result<Vec<_>, _>>()?;
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(|e| super::Error::Parse(format!("Response<Meal>::0\n< {}", e)))?;
         Ok(Response(groups))
     }
 }
@@ -62,11 +63,16 @@ impl TryFrom<ElementRef<'_>> for Group<Meal> {
         let group_name_selector = Selector::parse(".splGroup").unwrap();
         let meal_selector = Selector::parse(".splMeal").unwrap();
 
-        let name = html.select(&group_name_selector).next()?.inner_html();
+        let name = html
+            .select(&group_name_selector)
+            .next()
+            .ok_or(super::Error::Parse("Group::name".to_string()))?
+            .inner_html();
         let meals = html
             .select(&meal_selector)
             .map(Meal::try_from)
-            .collect::<Result<Vec<_>, _>>()?;
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(|e| super::Error::Parse(format!("Group::items\n< {}", e)))?;
         Ok(Group { name, items: meals })
     }
 }
@@ -119,19 +125,21 @@ impl TryFrom<ElementRef<'_>> for Meal {
         let icons_html = html
             .select(&icon_selector)
             .map(|img| img.value().attr("src"))
-            .collect::<Option<Vec<_>>>()?;
+            .collect::<Option<Vec<_>>>()
+            .ok_or(super::Error::Parse("Meal icons".to_string()))?;
         let (color_htmls, tag_htmls) =
             utility::partition(|&src| src.contains("ampel"), &icons_html);
-        let color = parse_color(color_htmls[0])?;
+        let color =
+            parse_color(color_htmls[0]).ok_or(super::Error::Parse("Meal::color".to_string()))?;
         let tags = tag_htmls
             .iter()
             .map(|&src| parse_tag(src))
             .collect::<Option<HashSet<_>>>()
-            .expect("Unknown tag icon");
+            .ok_or(super::Error::Parse("Meal::tags".to_string()))?;
         let meal_name = html
             .select(&meal_name_selector)
             .next()
-            .expect("No meal name found")
+            .ok_or(super::Error::Parse("Meal::name".to_string()))?
             .inner_html()
             .trim()
             .to_string();
@@ -265,7 +273,10 @@ impl TryFrom<ElementRef<'_>> for Price {
     type Error = super::Error;
     fn try_from(html: ElementRef<'_>) -> Result<Self, Self::Error> {
         let price_selector = Selector::parse("div.text-right").unwrap();
-        let price_raw = html.select(&price_selector).next()?;
+        let price_raw = html
+            .select(&price_selector)
+            .next()
+            .ok_or(super::Error::Parse("Meal::price".to_string()))?;
         let prices: Vec<_> = price_raw
             .inner_html()
             .replace("€", "")
@@ -273,7 +284,8 @@ impl TryFrom<ElementRef<'_>> for Price {
             .replace(",", ".")
             .split('/')
             .map(|p| p.parse::<f32>().map(Cents::from_euro))
-            .collect::<Result<Vec<_>, _>>()?;
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(|e| super::Error::Parse(format!("Meal::price\n< {}", e)))?;
         Ok(Price {
             student: prices[0],
             employee: prices[1],
@@ -282,7 +294,7 @@ impl TryFrom<ElementRef<'_>> for Price {
     }
 }
 
-pub fn get(mensa: &MensaCode, date: Option<NaiveDate>) -> Result<Response<Meal>, String> {
+pub fn get(mensa: &MensaCode, date: Option<NaiveDate>) -> Result<Response<Meal>, super::Error> {
     match Client::new()
         .post("https://www.stw.berlin/xhr/speiseplan-wochentag.html")
         .form(&[
@@ -301,11 +313,9 @@ pub fn get(mensa: &MensaCode, date: Option<NaiveDate>) -> Result<Response<Meal>,
     {
         Ok(mut response) => {
             assert!(response.status().is_success());
-            match Response::try_from(Html::parse_fragment(&response.text().unwrap())) {
-                Ok(menu) => Ok(menu),
-                Err(e) => Err(format!("{:?}", e)),
-            }
+            Response::try_from(Html::parse_fragment(&response.text().unwrap()))
+                .map_err(|e| super::Error::Parse(format!("Response<Meal>\n< {}", e)))
         }
-        Err(e) => Err(format!("{:?}", e)),
+        Err(e) => Err(super::Error::Net(e.to_string())),
     }
 }

@@ -11,11 +11,10 @@ impl TryFrom<Html> for Response<Mensa> {
     type Error = super::Error;
     fn try_from(html: Html) -> Result<Self, Self::Error> {
         let group_selector = Selector::parse("#itemsHochschulen .container-fluid").unwrap();
-        let groups = html
-            .select(&group_selector)
+        html.select(&group_selector)
             .map(Group::try_from)
-            .collect::<Result<Vec<_>, _>>()?;
-        Ok(Response(groups))
+            .collect::<Result<Vec<_>, _>>()
+            .map(Response)
     }
 }
 
@@ -26,18 +25,15 @@ impl TryFrom<ElementRef<'_>> for Group<Mensa> {
         let mensa_selector = Selector::parse(".row.row-top-percent-1.ptr[onclick]").unwrap();
         let name = html
             .select(&group_name_selector)
-            .next()?
+            .next()
+            .ok_or(super::Error::Parse("Group<Mensa>::name".to_string()))?
             .inner_html()
             .trim()
             .to_string();
-        let mensas = html
-            .select(&mensa_selector)
+        html.select(&mensa_selector)
             .map(Mensa::try_from)
-            .collect::<Result<Vec<_>, _>>()?;
-        Ok(Group {
-            name,
-            items: mensas,
-        })
+            .collect::<Result<Vec<_>, _>>()
+            .map(|items| Group { name, items })
     }
 }
 
@@ -66,11 +62,24 @@ impl TryFrom<ElementRef<'_>> for Mensa {
         let name_selector = Selector::parse("a.dummy div").unwrap();
         let code = MensaCode::from_str({
             let in_call = Regex::new(r"xhrLoad\('(\d+)'\)").unwrap();
-            let onclick = html.value().attr("onclick")?;
-            &in_call.captures(&onclick)?[1]
-        })?;
-        let address_html = html.select(&address_selector).next()?;
-        let name = address_html.select(&name_selector).next()?.inner_html();
+            let onclick = html
+                .value()
+                .attr("onclick")
+                .ok_or(super::Error::Parse("Mensa::code".to_string()))?;
+            &in_call
+                .captures(&onclick)
+                .ok_or(super::Error::Parse("Mensa::code".to_string()))?[1]
+        })
+        .map_err(|e| super::Error::Parse(format!("Mensa::code\n< {}", e)))?;
+        let address_html = html
+            .select(&address_selector)
+            .next()
+            .ok_or(super::Error::Parse("Mensa::address".to_string()))?;
+        let name = address_html
+            .select(&name_selector)
+            .next()
+            .ok_or(super::Error::Parse("Mensa::name".to_string()))?
+            .inner_html();
         let address = address_html
             .text()
             .skip(2)
@@ -85,7 +94,7 @@ impl TryFrom<ElementRef<'_>> for Mensa {
     }
 }
 
-pub fn get() -> Result<Response<Mensa>, String> {
+pub fn get() -> Result<Response<Mensa>, super::Error> {
     match Client::new()
         .get("https://www.stw.berlin/mensen.html")
         .header(header::USER_AGENT, "Mozilla/5.0")
@@ -93,11 +102,12 @@ pub fn get() -> Result<Response<Mensa>, String> {
     {
         Ok(mut response) => {
             assert!(response.status().is_success());
-            match Response::try_from(Html::parse_document(&response.text().unwrap())) {
-                Ok(codes) => Ok(codes),
-                Err(e) => Err(format!("{:?}", e)),
-            }
+            let content = response.text().map_err(|e| {
+                super::Error::Net(format!("network response text not found\n< {}", e))
+            })?;
+            Response::try_from(Html::parse_document(&content))
+                .map_err(|e| super::Error::Parse(format!("Response<Mensa>\n< {}", e)))
         }
-        Err(e) => Err(format!("{:?}", e)),
+        Err(e) => Err(super::Error::Net(e.to_string())),
     }
 }

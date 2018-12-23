@@ -11,32 +11,23 @@ pub mod codes;
 pub mod menu;
 mod utility;
 
-use ansi_term::Style;
+use ansi_term::{Colour::Red, Style};
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 
 #[derive(Debug)]
 pub enum Error {
-    None(std::option::NoneError),
-    ParseInt(std::num::ParseIntError),
-    ParseFloat(std::num::ParseFloatError),
+    Parse(String),
+    Net(String),
 }
 
-impl From<std::option::NoneError> for Error {
-    fn from(error: std::option::NoneError) -> Self {
-        Error::None(error)
-    }
-}
-
-impl From<std::num::ParseIntError> for Error {
-    fn from(error: std::num::ParseIntError) -> Self {
-        Error::ParseInt(error)
-    }
-}
-
-impl From<std::num::ParseFloatError> for Error {
-    fn from(error: std::num::ParseFloatError) -> Self {
-        Error::ParseFloat(error)
+impl Display for Error where {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        let error_style = Red.bold();
+        match self {
+            Error::Parse(message) => write!(f, "{} {}", error_style.paint("PARSE ERROR"), message),
+            Error::Net(message) => write!(f, "{} {}", error_style.paint("NETWORK ERROR"), message),
+        }
     }
 }
 
@@ -57,10 +48,7 @@ impl Display for MensaCode {
 impl FromStr for MensaCode {
     type Err = std::num::ParseIntError;
     fn from_str(string: &str) -> Result<Self, Self::Err> {
-        match string.parse::<u16>() {
-            Ok(number) => Ok(MensaCode(number)),
-            Err(err) => Err(err),
-        }
+        string.parse::<u16>().map(MensaCode)
     }
 }
 
