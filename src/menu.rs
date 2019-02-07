@@ -14,8 +14,8 @@ use std::str::FromStr;
 pub struct Cents(u64);
 
 impl Cents {
-    fn from_euro(euro: f32) -> Self {
-        Cents((euro * 100f32) as u64)
+    fn from_euro(euro: f64) -> Self {
+        Cents((euro * 100f64) as u64)
     }
 }
 
@@ -280,10 +280,10 @@ impl TryFrom<ElementRef<'_>> for Price {
         let prices: Vec<_> = price_raw
             .inner_html()
             .replace("€", "")
-            .trim()
             .replace(",", ".")
+            .trim()
             .split('/')
-            .map(|p| p.parse::<f32>().map(Cents::from_euro))
+            .map(|p| p.parse::<f64>().map(Cents::from_euro))
             .collect::<Result<Vec<_>, _>>()
             .map_err(|e| super::Error::Parse(format!("Meal::price\n< {}", e)))?;
         Ok(Price {
