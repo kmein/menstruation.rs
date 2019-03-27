@@ -3,6 +3,7 @@ use ansi_term::{Color, Style};
 use regex::Regex;
 use reqwest::{header, Client};
 use scraper::{html::Html, ElementRef, Selector};
+use serde_derive::{Deserialize, Serialize};
 use std::convert::TryFrom;
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;

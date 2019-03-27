@@ -1,17 +1,11 @@
 #![feature(try_from, try_trait)]
-extern crate ansi_term;
-extern crate regex;
-extern crate scraper;
-extern crate serde;
-
-#[macro_use]
-extern crate serde_derive;
 
 pub mod codes;
 pub mod menu;
 mod utility;
 
 use ansi_term::{Colour::Red, Style};
+use serde_derive::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 
@@ -21,7 +15,7 @@ pub enum Error {
     Net(String),
 }
 
-impl Display for Error where {
+impl Display for Error {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         let error_style = Red.bold();
         match self {
@@ -52,10 +46,10 @@ impl FromStr for MensaCode {
     }
 }
 
-pub fn filter_response<P, Item>(menu: Response<Item>, predicate: P) -> Response<Item>
-where
-    P: Fn(&Item) -> bool,
-{
+pub fn filter_response<Item>(
+    menu: Response<Item>,
+    predicate: impl Fn(&Item) -> bool,
+) -> Response<Item> {
     let mut groups = Vec::new();
     for group in menu.0 {
         let meals = group
@@ -76,15 +70,11 @@ where
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Response<Item>(Vec<Group<Item>>);
 
-impl<Item> Display for Response<Item>
-where
-    Item: Display,
-{
+impl<Item: Display> Display for Response<Item> {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-        for group in &self.0 {
+        Ok(for group in &self.0 {
             write!(f, "{}", group)?;
-        }
-        Ok(())
+        })
     }
 }
 
@@ -94,10 +84,7 @@ struct Group<Item> {
     items: Vec<Item>,
 }
 
-impl<Item> Display for Group<Item>
-where
-    Item: Display,
-{
+impl<Item: Display> Display for Group<Item> {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         writeln!(
             f,

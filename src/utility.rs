@@ -1,7 +1,4 @@
-pub fn partition<A, P>(predicate: P, xs: &[A]) -> (Vec<&A>, Vec<&A>)
-where
-    P: Fn(&A) -> bool,
-{
+pub fn partition<A>(predicate: fn(&A) -> bool, xs: &[A]) -> (Vec<&A>, Vec<&A>) {
     let mut toepfchen = Vec::new();
     let mut kroepfchen = Vec::new();
     for x in xs {

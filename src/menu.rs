@@ -1,14 +1,17 @@
 use super::utility;
 use super::{Group, MensaCode, Response};
 use ansi_term::{Colour, Style};
-use chrono::{Local, NaiveDate};
+use chrono::{Local, NaiveDate, ParseError};
 use regex::Regex;
 use reqwest::{header, Client};
+use rocket::request::{FromQuery, Query};
 use scraper::{html::Html, ElementRef, Selector};
+use serde_derive::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::convert::TryFrom;
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
+use structopt::StructOpt;
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Hash, Serialize, Deserialize)]
 pub struct Cents(u64);
@@ -184,11 +187,11 @@ impl FromStr for Color {
     type Err = String;
     fn from_str(string: &str) -> Result<Self, Self::Err> {
         match string {
-            "grün" => Ok(Color::Green),
-            "gelb" => Ok(Color::Yellow),
-            "rot" => Ok(Color::Red),
+            "green" => Ok(Color::Green),
+            "yellow" => Ok(Color::Yellow),
+            "red" => Ok(Color::Red),
             _ => Err(format!(
-                "Falsche Farbe: {}. Bitte nutze grün, gelb oder rot.",
+                "Falsche Farbe: {}. Bitte nutze green, yellow oder red.",
                 string
             )),
         }
@@ -214,7 +217,7 @@ pub enum Tag {
     Organic,
     #[serde(rename = "sustainable fishing")]
     SustainableFishing,
-    #[serde(rename = "climate")]
+    #[serde(rename = "climate friendly")]
     ClimateFriendly,
 }
 
@@ -223,12 +226,12 @@ impl FromStr for Tag {
     fn from_str(string: &str) -> Result<Self, Self::Err> {
         match string {
             "vegan" => Ok(Tag::Vegan),
-            "vegetarisch" => Ok(Tag::Vegetarian),
-            "bio" => Ok(Tag::Organic),
-            "öko" => Ok(Tag::ClimateFriendly),
-            "nachhaltig" => Ok(Tag::SustainableFishing),
+            "vegetarian" => Ok(Tag::Vegetarian),
+            "organic" => Ok(Tag::Organic),
+            "climate friendly" => Ok(Tag::ClimateFriendly),
+            "sustainable fishing" => Ok(Tag::SustainableFishing),
             _ => Err(format!(
-                "Falsches Tag: {}. Bitte nutze vegan, vegetarisch, bio, öko oder nachhaltig.",
+                "Wrong tag: {}. Please use vegan, vegetarian, organic, climate friendly or sustainable fishing.",
                 string
             )),
         }
@@ -241,11 +244,11 @@ impl Display for Tag {
             f,
             "{}",
             Style::new().italic().paint(match self {
-                Tag::Vegetarian => "vegetarisch",
+                Tag::Vegetarian => "vegetarian",
                 Tag::Vegan => "vegan",
-                Tag::Organic => "bio",
-                Tag::SustainableFishing => "nachhaltig",
-                Tag::ClimateFriendly => "öko",
+                Tag::Organic => "organic",
+                Tag::SustainableFishing => "sustainable fishing",
+                Tag::ClimateFriendly => "climate friendly",
             })
         )
     }
@@ -294,19 +297,20 @@ impl TryFrom<ElementRef<'_>> for Price {
     }
 }
 
-pub fn get(mensa: &MensaCode, date: Option<NaiveDate>) -> Result<Response<Meal>, super::Error> {
+pub fn get(options: &MenuOptions) -> Result<Response<Meal>, super::Error> {
     match Client::new()
         .post("https://www.stw.berlin/xhr/speiseplan-wochentag.html")
         .form(&[
             ("week", "now"),
             (
                 "date",
-                &date
+                &options
+                    .date
                     .unwrap_or_else(|| Local::today().naive_local())
                     .format("%Y-%m-%d")
                     .to_string(),
             ),
-            ("resources_id", &mensa.0.to_string()),
+            ("resources_id", &options.mensa.0.to_string()),
         ])
         .header(header::USER_AGENT, "Mozilla/5.0")
         .send()
@@ -315,7 +319,104 @@ pub fn get(mensa: &MensaCode, date: Option<NaiveDate>) -> Result<Response<Meal>,
             assert!(response.status().is_success());
             Response::try_from(Html::parse_fragment(&response.text().unwrap()))
                 .map_err(|e| super::Error::Parse(format!("Response<Meal>\n< {}", e)))
+                .map(|response| query(options, response))
         }
         Err(e) => Err(super::Error::Net(e.to_string())),
     }
+}
+
+#[derive(Debug, StructOpt)]
+#[structopt(rename_all = "kebab-case")]
+pub struct MenuOptions {
+    #[structopt(short, long, parse(try_from_str))]
+    /// Displays only meals with the specified colors
+    pub colors: Vec<Color>,
+    #[structopt(short, long, parse(try_from_str))]
+    /// Displays only meals with the specified tags
+    pub tags: Vec<Tag>,
+    #[structopt(short = "p", long)]
+    /// Displays no meals more expensive than a given price
+    pub max_price: Option<Cents>,
+    #[structopt(short, long)]
+    /// Displays no meals containing the specified allergens
+    pub allergens: Vec<String>,
+    #[structopt(short, long, parse(try_from_str = "parse_iso_date"))]
+    /// Chooses the menu date
+    pub date: Option<NaiveDate>,
+    #[structopt(short, long, default_value = "191")]
+    /// Chooses a dining facility
+    pub mensa: MensaCode,
+}
+
+impl<'a> FromQuery<'a> for MenuOptions {
+    type Error = ();
+
+    fn from_query(query: Query<'a>) -> Result<Self, Self::Error> {
+        fn query_values<T: FromStr>(key: &str, query: &Query) -> Vec<T> {
+            query
+                .clone()
+                .filter_map(|item| {
+                    if item.key == key {
+                        FromStr::from_str(item.value).ok()
+                    } else {
+                        None
+                    }
+                })
+                .collect()
+        }
+
+        if let Some(Ok(mensa)) = query
+            .clone()
+            .find(|item| item.key == "mensa")
+            .map(|item| item.value.parse().map(|code: u16| code.into()))
+        {
+            Ok(MenuOptions {
+                colors: query_values("color", &query),
+                tags: query_values("tag", &query),
+                max_price: query
+                    .clone()
+                    .find(|item| item.key == "max_price")
+                    .map(|item| item.value.parse().map(|code: u64| code.into()))
+                    .and_then(|x| x.ok()),
+                allergens: query_values("allergen", &query),
+                date: query
+                    .clone()
+                    .find(|item| item.key == "date")
+                    .map(|item| parse_iso_date(item.value))
+                    .and_then(|x| x.ok()),
+                mensa,
+            })
+        } else {
+            Err(())
+        }
+    }
+}
+
+fn parse_iso_date(string: &str) -> Result<NaiveDate, ParseError> {
+    NaiveDate::parse_from_str(string, "%Y-%m-%d")
+}
+
+fn query(options: &MenuOptions, menu: Response<Meal>) -> Response<Meal> {
+    super::filter_response(menu, |meal| {
+        let price_ok = if let Some(max) = &options.max_price {
+            if let Some(price) = &meal.price {
+                price.student <= *max
+            } else {
+                false
+            }
+        } else {
+            true
+        };
+        let colors_ok = options.colors.is_empty() || options.colors.contains(&meal.color);
+        let tags_ok = options.tags.is_empty()
+            || meal.tags.iter().any(|tag| {
+                options.tags.contains(tag)
+                    || (tag == &Tag::Vegan && options.tags.contains(&Tag::Vegetarian))
+            });
+        let allergens_ok = meal
+            .allergens
+            .iter()
+            .all(|allergen| !options.allergens.contains(allergen));
+        price_ok && colors_ok && tags_ok && allergens_ok
+    })
 }
