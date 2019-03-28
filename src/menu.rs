@@ -1,7 +1,6 @@
-use super::utility;
-use super::{Group, MensaCode, Response};
+use super::{error::Error, utility, Group, MensaCode, Response};
 use ansi_term::{Colour, Style};
-use chrono::{Local, NaiveDate, ParseError};
+use chrono::{format::ParseError, Local, NaiveDate};
 use regex::Regex;
 use reqwest::{header, Client};
 use rocket::request::{FromQuery, Query};
@@ -11,7 +10,6 @@ use std::collections::HashSet;
 use std::convert::TryFrom;
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
-use structopt::StructOpt;
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Hash, Serialize, Deserialize)]
 pub struct Cents(u64);
@@ -47,39 +45,6 @@ impl FromStr for Cents {
     }
 }
 
-impl TryFrom<Html> for Response<Meal> {
-    type Error = super::Error;
-    fn try_from(html: Html) -> Result<Self, Self::Error> {
-        let group_selector = Selector::parse(".splGroupWrapper").unwrap();
-        let groups = html
-            .select(&group_selector)
-            .map(Group::try_from)
-            .collect::<Result<Vec<_>, _>>()
-            .map_err(|e| super::Error::Parse(format!("Response<Meal>::0\n< {}", e)))?;
-        Ok(Response(groups))
-    }
-}
-
-impl TryFrom<ElementRef<'_>> for Group<Meal> {
-    type Error = super::Error;
-    fn try_from(html: ElementRef<'_>) -> Result<Self, Self::Error> {
-        let group_name_selector = Selector::parse(".splGroup").unwrap();
-        let meal_selector = Selector::parse(".splMeal").unwrap();
-
-        let name = html
-            .select(&group_name_selector)
-            .next()
-            .ok_or(super::Error::Parse("Group::name".to_string()))?
-            .inner_html();
-        let meals = html
-            .select(&meal_selector)
-            .map(Meal::try_from)
-            .collect::<Result<Vec<_>, _>>()
-            .map_err(|e| super::Error::Parse(format!("Group::items\n< {}", e)))?;
-        Ok(Group { name, items: meals })
-    }
-}
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Meal {
     pub name: String,
@@ -87,6 +52,39 @@ pub struct Meal {
     pub tags: HashSet<Tag>,
     pub price: Option<Price>,
     pub allergens: HashSet<String>,
+}
+
+impl TryFrom<Html> for Response<Meal> {
+    type Error = Error;
+    fn try_from(html: Html) -> Result<Self, Self::Error> {
+        let group_selector = Selector::parse(".splGroupWrapper").unwrap();
+        let groups = html
+            .select(&group_selector)
+            .map(Group::try_from)
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(|e| Error::Parse(format!("Response<Meal>::0\n< {}", e)))?;
+        Ok(Response(groups))
+    }
+}
+
+impl TryFrom<ElementRef<'_>> for Group<Meal> {
+    type Error = Error;
+    fn try_from(html: ElementRef<'_>) -> Result<Self, Self::Error> {
+        let group_name_selector = Selector::parse(".splGroup").unwrap();
+        let meal_selector = Selector::parse(".splMeal").unwrap();
+
+        let name = html
+            .select(&group_name_selector)
+            .next()
+            .ok_or(Error::Parse("Group::name".to_string()))?
+            .inner_html();
+        let meals = html
+            .select(&meal_selector)
+            .map(Meal::try_from)
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(|e| Error::Parse(format!("Group::items\n< {}", e)))?;
+        Ok(Group { name, items: meals })
+    }
 }
 
 impl Display for Meal {
@@ -119,7 +117,7 @@ impl Display for Meal {
 }
 
 impl TryFrom<ElementRef<'_>> for Meal {
-    type Error = super::Error;
+    type Error = Error;
     fn try_from(html: ElementRef<'_>) -> Result<Self, Self::Error> {
         let icon_selector = Selector::parse("img[src].splIcon").unwrap();
         let meal_name_selector = Selector::parse("span.bold").unwrap();
@@ -129,20 +127,20 @@ impl TryFrom<ElementRef<'_>> for Meal {
             .select(&icon_selector)
             .map(|img| img.value().attr("src"))
             .collect::<Option<Vec<_>>>()
-            .ok_or(super::Error::Parse("Meal icons".to_string()))?;
+            .ok_or(Error::Parse("Meal icons".to_string()))?;
         let (color_htmls, tag_htmls) =
             utility::partition(|&src| src.contains("ampel"), &icons_html);
         let color =
-            parse_color(color_htmls[0]).ok_or(super::Error::Parse("Meal::color".to_string()))?;
+            Color::from_img_src(color_htmls[0]).ok_or(Error::Parse("Meal::color".to_string()))?;
         let tags = tag_htmls
             .iter()
-            .map(|&src| parse_tag(src))
+            .map(|&src| Tag::from_img_src(src))
             .collect::<Option<HashSet<_>>>()
-            .ok_or(super::Error::Parse("Meal::tags".to_string()))?;
+            .ok_or(Error::Parse("Meal::tags".to_string()))?;
         let meal_name = html
             .select(&meal_name_selector)
             .next()
-            .ok_or(super::Error::Parse("Meal::name".to_string()))?
+            .ok_or(Error::Parse("Meal::name".to_string()))?
             .inner_html()
             .trim()
             .to_string();
@@ -198,12 +196,14 @@ impl FromStr for Color {
     }
 }
 
-fn parse_color(uri: &str) -> Option<Color> {
-    match uri {
-        "/vendor/infomax/mensen/icons/ampel_gelb_70x65.png" => Some(Color::Yellow),
-        "/vendor/infomax/mensen/icons/ampel_gruen_70x65.png" => Some(Color::Green),
-        "/vendor/infomax/mensen/icons/ampel_rot_70x65.png" => Some(Color::Red),
-        _ => None,
+impl Color {
+    fn from_img_src(uri: &str) -> Option<Self> {
+        match uri {
+            "/vendor/infomax/mensen/icons/ampel_gelb_70x65.png" => Some(Color::Yellow),
+            "/vendor/infomax/mensen/icons/ampel_gruen_70x65.png" => Some(Color::Green),
+            "/vendor/infomax/mensen/icons/ampel_rot_70x65.png" => Some(Color::Red),
+            _ => None,
+        }
     }
 }
 
@@ -254,14 +254,16 @@ impl Display for Tag {
     }
 }
 
-fn parse_tag(uri: &str) -> Option<Tag> {
-    match uri {
-        "/vendor/infomax/mensen/icons/1.png" => Some(Tag::Vegetarian),
-        "/vendor/infomax/mensen/icons/15.png" => Some(Tag::Vegan),
-        "/vendor/infomax/mensen/icons/18.png" => Some(Tag::Organic),
-        "/vendor/infomax/mensen/icons/38.png" => Some(Tag::SustainableFishing),
-        "/vendor/infomax/mensen/icons/43.png" => Some(Tag::ClimateFriendly),
-        _ => None,
+impl Tag {
+    fn from_img_src(uri: &str) -> Option<Tag> {
+        match uri {
+            "/vendor/infomax/mensen/icons/1.png" => Some(Tag::Vegetarian),
+            "/vendor/infomax/mensen/icons/15.png" => Some(Tag::Vegan),
+            "/vendor/infomax/mensen/icons/18.png" => Some(Tag::Organic),
+            "/vendor/infomax/mensen/icons/38.png" => Some(Tag::SustainableFishing),
+            "/vendor/infomax/mensen/icons/43.png" => Some(Tag::ClimateFriendly),
+            _ => None,
+        }
     }
 }
 
@@ -273,13 +275,13 @@ pub struct Price {
 }
 
 impl TryFrom<ElementRef<'_>> for Price {
-    type Error = super::Error;
+    type Error = Error;
     fn try_from(html: ElementRef<'_>) -> Result<Self, Self::Error> {
         let price_selector = Selector::parse("div.text-right").unwrap();
         let price_raw = html
             .select(&price_selector)
             .next()
-            .ok_or(super::Error::Parse("Meal::price".to_string()))?;
+            .ok_or(Error::Parse("Meal::price".to_string()))?;
         let prices: Vec<_> = price_raw
             .inner_html()
             .replace("€", "")
@@ -288,7 +290,7 @@ impl TryFrom<ElementRef<'_>> for Price {
             .split('/')
             .map(|p| p.parse::<f64>().map(Cents::from_euro))
             .collect::<Result<Vec<_>, _>>()
-            .map_err(|e| super::Error::Parse(format!("Meal::price\n< {}", e)))?;
+            .map_err(|e| Error::Parse(format!("Meal::price\n< {}", e)))?;
         Ok(Price {
             student: prices[0],
             employee: prices[1],
@@ -297,7 +299,7 @@ impl TryFrom<ElementRef<'_>> for Price {
     }
 }
 
-pub fn get(options: &MenuOptions) -> Result<Response<Meal>, super::Error> {
+pub fn get(options: MenuOptions) -> Result<Response<Meal>, Error> {
     match Client::new()
         .post("https://www.stw.berlin/xhr/speiseplan-wochentag.html")
         .form(&[
@@ -318,14 +320,14 @@ pub fn get(options: &MenuOptions) -> Result<Response<Meal>, super::Error> {
         Ok(mut response) => {
             assert!(response.status().is_success());
             Response::try_from(Html::parse_fragment(&response.text().unwrap()))
-                .map_err(|e| super::Error::Parse(format!("Response<Meal>\n< {}", e)))
-                .map(|response| query(options, response))
+                .map_err(|e| Error::Parse(format!("Response<Meal>\n< {}", e)))
+                .map(|response| response.filter(|meal| options.meal_matches(meal)))
         }
-        Err(e) => Err(super::Error::Net(e.to_string())),
+        Err(e) => Err(Error::Net(e.to_string())),
     }
 }
 
-#[derive(Debug, StructOpt)]
+#[derive(Debug, structopt::StructOpt)]
 #[structopt(rename_all = "kebab-case")]
 pub struct MenuOptions {
     #[structopt(short, long, parse(try_from_str))]
@@ -348,6 +350,10 @@ pub struct MenuOptions {
     pub mensa: MensaCode,
 }
 
+fn parse_iso_date(string: &str) -> Result<NaiveDate, ParseError> {
+    NaiveDate::parse_from_str(string, "%Y-%m-%d")
+}
+
 impl<'a> FromQuery<'a> for MenuOptions {
     type Error = ();
 
@@ -357,7 +363,7 @@ impl<'a> FromQuery<'a> for MenuOptions {
                 .clone()
                 .filter_map(|item| {
                     if item.key == key {
-                        FromStr::from_str(item.value).ok()
+                        item.value.parse().ok()
                     } else {
                         None
                     }
@@ -365,25 +371,29 @@ impl<'a> FromQuery<'a> for MenuOptions {
                 .collect()
         }
 
-        if let Some(Ok(mensa)) = query
-            .clone()
-            .find(|item| item.key == "mensa")
-            .map(|item| item.value.parse().map(|code: u16| code.into()))
-        {
+        fn query_value<T, E>(
+            key: &str,
+            query: &Query,
+            parse: impl Fn(&str) -> Result<T, E>,
+        ) -> Option<T> {
+            query
+                .clone()
+                .find(|item| item.key == key)
+                .map(|item| parse(item.value))
+                .and_then(|x| x.ok())
+        }
+
+        if let Some(mensa) = query_value("mensa", &query, |value| {
+            value.parse().map(|code: u16| code.into())
+        }) {
             Ok(MenuOptions {
                 colors: query_values("color", &query),
                 tags: query_values("tag", &query),
-                max_price: query
-                    .clone()
-                    .find(|item| item.key == "max_price")
-                    .map(|item| item.value.parse().map(|code: u64| code.into()))
-                    .and_then(|x| x.ok()),
+                max_price: query_value("max_price", &query, |value| {
+                    value.parse().map(|code: u64| code.into())
+                }),
                 allergens: query_values("allergen", &query),
-                date: query
-                    .clone()
-                    .find(|item| item.key == "date")
-                    .map(|item| parse_iso_date(item.value))
-                    .and_then(|x| x.ok()),
+                date: query_value("date", &query, parse_iso_date),
                 mensa,
             })
         } else {
@@ -392,31 +402,27 @@ impl<'a> FromQuery<'a> for MenuOptions {
     }
 }
 
-fn parse_iso_date(string: &str) -> Result<NaiveDate, ParseError> {
-    NaiveDate::parse_from_str(string, "%Y-%m-%d")
-}
-
-fn query(options: &MenuOptions, menu: Response<Meal>) -> Response<Meal> {
-    super::filter_response(menu, |meal| {
-        let price_ok = if let Some(max) = &options.max_price {
+impl MenuOptions {
+    fn meal_matches(&self, meal: &Meal) -> bool {
+        let price_ok = if let Some(max) = self.max_price {
             if let Some(price) = &meal.price {
-                price.student <= *max
+                price.student <= max
             } else {
                 false
             }
         } else {
             true
         };
-        let colors_ok = options.colors.is_empty() || options.colors.contains(&meal.color);
-        let tags_ok = options.tags.is_empty()
+        let colors_ok = self.colors.is_empty() || self.colors.contains(&meal.color);
+        let tags_ok = self.tags.is_empty()
             || meal.tags.iter().any(|tag| {
-                options.tags.contains(tag)
-                    || (tag == &Tag::Vegan && options.tags.contains(&Tag::Vegetarian))
+                self.tags.contains(tag)
+                    || (tag == &Tag::Vegan && self.tags.contains(&Tag::Vegetarian))
             });
         let allergens_ok = meal
             .allergens
             .iter()
-            .all(|allergen| !options.allergens.contains(allergen));
+            .all(|allergen| !self.allergens.contains(allergen));
         price_ok && colors_ok && tags_ok && allergens_ok
-    })
+    }
 }

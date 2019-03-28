@@ -11,12 +11,14 @@ use rocket_contrib::json::Json;
 #[get("/menu?<options..>")]
 fn menu(options: menu::MenuOptions) -> Option<Json<Response<Meal>>> {
     println!("{:?}", options);
-    menu::get(&options).map(Json).ok()
+    menu::get(options).map(Json).ok()
 }
 
-#[get("/codes")]
-fn codes() -> Option<Json<Response<Mensa>>> {
-    codes::get().map(|codes_response| Json(codes_response)).ok()
+#[get("/codes?<pattern>")]
+fn codes(pattern: Option<String>) -> Option<Json<Response<Mensa>>> {
+    codes::get(pattern)
+        .map(|codes_response| Json(codes_response))
+        .ok()
 }
 
 fn main() {

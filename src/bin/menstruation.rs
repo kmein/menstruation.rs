@@ -25,21 +25,12 @@ fn main() {
     let options = Options::from_args();
 
     match options {
-        Options::Menu(menu_options) => match menu::get(&menu_options) {
+        Options::Menu(menu_options) => match menu::get(menu_options) {
             Ok(menu_response) => println!("{}", menu_response),
             Err(e) => eprintln!("{}", e),
         },
-        Options::Codes { pattern } => match codes::get() {
-            Ok(codes_response) => println!(
-                "{}",
-                match pattern {
-                    Some(p) => filter_response(codes_response, |mensa| mensa
-                        .name
-                        .to_lowercase()
-                        .contains(&p.to_lowercase())),
-                    None => codes_response,
-                }
-            ),
+        Options::Codes { pattern } => match codes::get(pattern) {
+            Ok(codes_response) => println!("{}", codes_response),
             Err(e) => eprintln!("{}", e),
         },
     }

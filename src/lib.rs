@@ -1,31 +1,16 @@
 #![feature(try_from, try_trait)]
 
 pub mod codes;
+mod error;
 pub mod menu;
 mod utility;
 
-use ansi_term::{Colour::Red, Style};
+use ansi_term::Style;
 use serde_derive::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 
-#[derive(Debug)]
-pub enum Error {
-    Parse(String),
-    Net(String),
-}
-
-impl Display for Error {
-    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-        let error_style = Red.bold();
-        match self {
-            Error::Parse(message) => write!(f, "{} {}", error_style.paint("PARSE ERROR"), message),
-            Error::Net(message) => write!(f, "{} {}", error_style.paint("NETWORK ERROR"), message),
-        }
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MensaCode(pub u16);
 
 impl From<u16> for MensaCode {
@@ -46,29 +31,28 @@ impl FromStr for MensaCode {
     }
 }
 
-pub fn filter_response<Item>(
-    menu: Response<Item>,
-    predicate: impl Fn(&Item) -> bool,
-) -> Response<Item> {
-    let mut groups = Vec::new();
-    for group in menu.0 {
-        let meals = group
-            .items
-            .into_iter()
-            .filter(&predicate)
-            .collect::<Vec<_>>();
-        if !meals.is_empty() {
-            groups.push(Group {
-                items: meals,
-                ..group
-            });
-        }
-    }
-    Response(groups)
-}
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Response<Item>(Vec<Group<Item>>);
+
+impl<Item> Response<Item> {
+    pub fn filter(self, predicate: impl Fn(&Item) -> bool) -> Self {
+        let mut groups = Vec::new();
+        for group in self.0 {
+            let meals = group
+                .items
+                .into_iter()
+                .filter(&predicate)
+                .collect::<Vec<_>>();
+            if !meals.is_empty() {
+                groups.push(Group {
+                    items: meals,
+                    ..group
+                });
+            }
+        }
+        Response(groups)
+    }
+}
 
 impl<Item: Display> Display for Response<Item> {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
