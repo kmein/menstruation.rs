@@ -111,7 +111,7 @@ impl Display for Meal {
                 .iter()
                 .map(|tag| format!("{}", tag))
                 .collect::<Vec<_>>()
-                .join(" ")
+                .join(", ")
         )
     }
 }
