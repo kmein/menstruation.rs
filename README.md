@@ -1,4 +1,4 @@
-# ![Menstruation. Regel dein Essen.](https://img.shields.io/badge/menstruation-Regel%20dein%20Essen.-red.svg?style=for-the-badge) [![Build Status](https://img.shields.io/travis/kmein/menstruation.rs.svg?style=flat-square&logo=travis)](https://travis-ci.org/kmein/menstruation.rs) ![Size](https://img.shields.io/github/languages/code-size/kmein/menstruation.rs.svg?style=flat-square&logo=rust&logoColor=white)
+# ![Menstruation. Regel dein Essen.](https://img.shields.io/badge/menstruation-Regel%20dein%20Essen.-red.svg?style=for-the-badge) [![Build Status](https://img.shields.io/docker/cloud/build/kmein/menstruation.svg?logo=docker&logoColor=white&style=flat-square)](https://cloud.docker.com/repository/docker/kmein/menstruation) ![Size](https://img.shields.io/github/languages/code-size/kmein/menstruation.rs.svg?style=flat-square&logo=rust&logoColor=white)
 
 Stell dir vor, du studierst in Berlin und möchtest wissen, was es heute in deiner Mensa gibt.
 Du möchtest aber
