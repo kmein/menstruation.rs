@@ -8,8 +8,7 @@ RUN rustup default nightly \
 
 FROM debian:9-slim
 
-ENV TZ=Europe/Berlin \
-    ROCKET_ENV=production
+ENV TZ=Europe/Berlin
 
 RUN set -ex \
     && apt-get update \
