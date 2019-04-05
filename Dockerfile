@@ -2,7 +2,7 @@ FROM rust as builder
 RUN git clone https://github.com/kmein/menstruation.rs.git --branch master --single-branch \
     && rustup default nightly \
     && cd /menstruation.rs \
-    && cargo build --release --bin menstruation_server
+    && cargo build --quiet --release --bin menstruation_server
 
 FROM debian:9-slim
 
