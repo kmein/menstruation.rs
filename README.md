@@ -20,6 +20,16 @@ cargo install --bin menstruation --path .
 
 ### Installation
 
+#### Docker
+
+```bash
+docker pull kmein/menstruation
+
+docker run --rm -p 8000:8000 -ti kmein/menstruation
+```
+
+#### Manuell
+
 ```bash
 git clone https://github.com/kmein/menstruation.rs && cd menstruation.rs
 cargo install --bin menstruation_server --path .
