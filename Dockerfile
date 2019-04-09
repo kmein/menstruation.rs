@@ -1,6 +1,8 @@
 FROM rust as builder
-RUN git clone https://github.com/kmein/menstruation.rs.git --branch master --single-branch \
-    && rustup default nightly \
+
+ADD . /menstruation.rs/
+
+RUN rustup default nightly \
     && cd /menstruation.rs \
     && cargo build --quiet --release --bin menstruation_server
 
@@ -14,6 +16,9 @@ RUN set -ex \
        apt-get install -y --no-install-recommends \
                           tzdata \
                           openssl \
+    && DEBIAN_FRONTEND=noninteractive \
+       apt-get install -y \
+                          curl \
     && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime \
     && echo $TZ > /etc/timezone \
     && rm -rf /var/lib/apt/lists/*
