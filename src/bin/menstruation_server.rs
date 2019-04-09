@@ -10,7 +10,6 @@ use rocket_contrib::json::Json;
 
 #[get("/menu?<options..>")]
 fn menu(options: menu::MenuOptions) -> Option<Json<Response<Meal>>> {
-    println!("{:?}", options);
     menu::get(options).map(Json).ok()
 }
 
