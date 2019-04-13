@@ -1,5 +1,3 @@
-#![feature(try_from)]
-
 use menstruation::*;
 use structopt::StructOpt;
 
@@ -19,6 +17,9 @@ enum Options {
         /// Searches for a specific pattern
         pattern: Option<String>,
     },
+    #[structopt(raw(setting = "structopt::clap::AppSettings::ColoredHelp"))]
+    /// List all allergen codes
+    Allergens,
 }
 
 fn main() {
@@ -31,6 +32,10 @@ fn main() {
         },
         Options::Codes { pattern } => match codes::get(pattern) {
             Ok(codes_response) => println!("{}", codes_response),
+            Err(e) => eprintln!("{}", e),
+        },
+        Options::Allergens => match allergens::get() {
+            Ok(allergen_group) => println!("{}", allergen_group),
             Err(e) => eprintln!("{}", e),
         },
     }
