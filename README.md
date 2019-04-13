@@ -47,3 +47,4 @@ menstruation_server  # runs on port 8000
   - `tag=TAGS...` filtert nach bestimmten Kriterien, z.B. vegan (optional)
   - `max_price=CENTS` filtert nach Preis (optional)
   - `date=YYYY-MM-DD` wählt das Datum aus (optional)
+- GET `/allergens` gibt alle Allergene zurück.
