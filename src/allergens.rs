@@ -26,13 +26,13 @@ impl TryFrom<Html> for Group<Allergen> {
             items: {
                 let mut result = Vec::new();
                 for element_ref in html.select(&group_selector) {
-                    let text = element_ref.inner_html();
+                    let text = element_ref.inner_html().replace("&nbsp;", " ");
                     for captures in number_name.captures_iter(&text) {
                         result.push(Allergen {
                             number: captures["number"]
                                 .parse::<u8>()
                                 .map_err(|e| Error::Parse(format!("Allergen\n< {}", e)))?,
-                            name: captures["name"].into(),
+                            name: captures["name"].to_string(),
                             index: captures["index"].chars().nth(0),
                         })
                     }
