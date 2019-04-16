@@ -1,5 +1,6 @@
-#![feature(try_from, try_trait)]
+#![feature(try_trait)]
 
+pub mod allergens;
 pub mod codes;
 mod error;
 pub mod menu;
@@ -63,7 +64,7 @@ impl<Item: Display> Display for Response<Item> {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-struct Group<Item> {
+pub struct Group<Item> {
     name: String,
     items: Vec<Item>,
 }

@@ -20,6 +20,16 @@ cargo install --bin menstruation --path .
 
 ### Installation
 
+#### Docker
+
+```bash
+docker pull kmein/menstruation
+
+docker run --rm -p 8000:8000 -ti kmein/menstruation
+```
+
+#### Manuell
+
 ```bash
 git clone https://github.com/kmein/menstruation.rs && cd menstruation.rs
 cargo install --bin menstruation_server --path .
@@ -37,3 +47,4 @@ menstruation_server  # runs on port 8000
   - `tag=TAGS...` filtert nach bestimmten Kriterien, z.B. vegan (optional)
   - `max_price=CENTS` filtert nach Preis (optional)
   - `date=YYYY-MM-DD` wählt das Datum aus (optional)
+- GET `/allergens` gibt alle Allergene zurück.
