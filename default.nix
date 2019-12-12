@@ -5,7 +5,7 @@ let
   nightly = pkgs.rustChannelOf { date = "2019-06-20"; channel = "nightly"; };
   nightly-rustPlatform = pkgs.makeRustPlatform {
     rustc = nightly.rust;
-    cargo = nightly.cargo;
+    cargo = nightly.rust;
   };
 in with pkgs; nightly-rustPlatform.buildRustPackage rec {
   name = "menstruation-rs";
@@ -14,7 +14,8 @@ in with pkgs; nightly-rustPlatform.buildRustPackage rec {
 
   nativeBuildInputs = [ pkgconfig ] ++ lib.optional (builtins.currentSystem == "x86_64-darwin") darwin.apple_sdk.frameworks.Security;
 
-  checkPhase = "";
+  preConfigure = "export HOME=$(mktemp -d)";
+
   cargoSha256 = "0r1rj9pb0ln95g6266afr43nygfnh891mqyh7mzk4n4y45vb5dv3";
 
   buildInputs = [ openssl ];
