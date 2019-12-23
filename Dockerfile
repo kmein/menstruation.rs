@@ -2,7 +2,7 @@ FROM rust AS builder
 
 ADD . /menstruation.rs/
 
-RUN rustup install nightly-06-20 \
+RUN rustup install nightly-2019-06-20 \
     && cd /menstruation.rs \
     && rustup run nightly cargo build --quiet --release --bin menstruation_server
 
