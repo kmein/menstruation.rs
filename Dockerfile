@@ -4,7 +4,7 @@ ADD . /menstruation.rs/
 
 RUN rustup install nightly-2019-06-20 \
     && cd /menstruation.rs \
-    && rustup run nightly cargo build --quiet --release --bin menstruation_server
+    && rustup run nightly-2019-06-20 cargo build --quiet --release --bin menstruation_server
 
 FROM debian:9-slim
 
