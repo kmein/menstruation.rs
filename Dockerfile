@@ -2,9 +2,9 @@ FROM rust AS builder
 
 ADD . /menstruation.rs/
 
-RUN rustup default nightly \
+RUN rustup install nightly-06-20 \
     && cd /menstruation.rs \
-    && cargo build --quiet --release --bin menstruation_server
+    && rustup run nightly cargo build --quiet --release --bin menstruation_server
 
 FROM debian:9-slim
 
