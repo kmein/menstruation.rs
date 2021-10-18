@@ -1,4 +1,4 @@
-# Menstruation. Regel dein Essen. [![Build Status](https://img.shields.io/docker/cloud/build/kmein/menstruation.svg?logo=docker&logoColor=white&style=flat-square)](https://hub.docker.com/r/kmein/menstruation)
+# Menstruation. Regel dein Essen.
 
 ## CLI
 
