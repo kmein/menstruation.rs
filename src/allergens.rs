@@ -1,7 +1,7 @@
 use super::{error::Error, Group};
 use ansi_term::{Color, Style};
 use regex::Regex;
-use reqwest::{header, Client};
+use reqwest::{header, blocking::Client};
 use scraper::{Html, Selector};
 use serde_derive::{Deserialize, Serialize};
 use std::convert::TryFrom;
@@ -62,7 +62,7 @@ pub fn get() -> Result<Group<Allergen>, Error> {
         .header(header::USER_AGENT, "Mozilla/5.0")
         .send()
     {
-        Ok(mut response) => {
+        Ok(response) => {
             assert!(response.status().is_success());
             let content = response
                 .text()

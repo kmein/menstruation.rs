@@ -2,7 +2,7 @@ use super::{error::Error, utility, Group, MensaCode, Response};
 use ansi_term::{Colour, Style};
 use chrono::{format::ParseError, Local, NaiveDate};
 use regex::Regex;
-use reqwest::{header, Client};
+use reqwest::{blocking::Client, header};
 use rocket::request::{FromQuery, Query};
 use scraper::{html::Html, ElementRef, Selector};
 use serde_derive::{Deserialize, Serialize};
@@ -283,12 +283,14 @@ impl TryFrom<ElementRef<'_>> for Price {
             .next()
             .ok_or(Error::Parse("Meal::price".to_string()))?;
         let prices: Vec<_> = price_raw
-            .inner_html()
+            .text()
+            .nth(0)
+            .ok_or(Error::Parse("Meal::price\n< not enough lines".to_string()))?
+            .trim()
             .replace("€", "")
             .replace(",", ".")
-            .trim()
             .split('/')
-            .map(|p| p.parse::<f64>().map(Cents::from_euro))
+            .map(|p| p.trim().parse::<f64>().map(Cents::from_euro))
             .collect::<Result<Vec<_>, _>>()
             .map_err(|e| Error::Parse(format!("Meal::price\n< {}", e)))?;
         Ok(Price {
@@ -317,7 +319,7 @@ pub fn get(options: MenuOptions) -> Result<Response<Meal>, Error> {
         .header(header::USER_AGENT, "Mozilla/5.0")
         .send()
     {
-        Ok(mut response) => {
+        Ok(response) => {
             assert!(response.status().is_success());
             Response::try_from(Html::parse_fragment(&response.text().unwrap()))
                 .map_err(|e| Error::Parse(format!("Response<Meal>\n< {}", e)))
@@ -342,7 +344,7 @@ pub struct MenuOptions {
     #[structopt(short, long)]
     /// Displays no meals containing the specified allergens
     pub allergens: Vec<String>,
-    #[structopt(short, long, parse(try_from_str = "parse_iso_date"))]
+    #[structopt(short, long, parse(try_from_str = parse_iso_date))]
     /// Chooses the menu date
     pub date: Option<NaiveDate>,
     #[structopt(short, long, default_value = "191")]

@@ -1,7 +1,7 @@
 use super::{error::Error, Group, MensaCode, Response};
 use ansi_term::{Color, Style};
 use regex::Regex;
-use reqwest::{header, Client};
+use reqwest::{header, blocking::Client};
 use scraper::{html::Html, ElementRef, Selector};
 use serde_derive::{Deserialize, Serialize};
 use std::convert::TryFrom;
@@ -101,7 +101,7 @@ pub fn get(pattern: Option<String>) -> Result<Response<Mensa>, Error> {
         .header(header::USER_AGENT, "Mozilla/5.0")
         .send()
     {
-        Ok(mut response) => {
+        Ok(response) => {
             assert!(response.status().is_success());
             let content = response
                 .text()

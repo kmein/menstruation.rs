@@ -4,20 +4,20 @@ use structopt::StructOpt;
 #[derive(StructOpt)]
 #[structopt(
     rename_all = "kebab-case",
-    raw(setting = "structopt::clap::AppSettings::ColoredHelp")
+    setting = structopt::clap::AppSettings::ColoredHelp
 )]
 enum Options {
-    #[structopt(raw(setting = "structopt::clap::AppSettings::ColoredHelp"))]
+    #[structopt(setting = structopt::clap::AppSettings::ColoredHelp)]
     /// Displays the menu
     Menu(menu::MenuOptions),
-    #[structopt(raw(setting = "structopt::clap::AppSettings::ColoredHelp"))]
+    #[structopt(setting = structopt::clap::AppSettings::ColoredHelp)]
     /// Lists all available dining facilities
     Codes {
         #[structopt(name = "PATTERN")]
         /// Searches for a specific pattern
         pattern: Option<String>,
     },
-    #[structopt(raw(setting = "structopt::clap::AppSettings::ColoredHelp"))]
+    #[structopt(setting = structopt::clap::AppSettings::ColoredHelp)]
     /// List all allergen codes
     Allergens,
 }

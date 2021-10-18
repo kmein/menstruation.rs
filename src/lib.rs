@@ -1,5 +1,3 @@
-#![feature(try_trait)]
-
 pub mod allergens;
 pub mod codes;
 mod error;
