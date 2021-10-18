@@ -1,29 +1,13 @@
-{ mozilla ? import (builtins.fetchTarball https://github.com/mozilla/nixpkgs-mozilla/archive/master.tar.gz)
-, pkgs ?  import <nixpkgs> { overlays = [ mozilla ]; }
-}:
+{ pkgs ?  import <nixpkgs> }:
 let
-  nightly = pkgs.rustChannelOf { date = "2019-06-20"; channel = "nightly"; };
-  nightly-rustPlatform = pkgs.makeRustPlatform {
-    rustc = nightly.rust;
-    cargo = nightly.rust;
-  };
-in with pkgs; nightly-rustPlatform.buildRustPackage rec {
-  name = "menstruation-rs";
-
+  channel = import nix/rust-channel.nix;
+  platform = pkgs.makeRustPlatform { rustc = channel; cargo = channel; };
+in platform.buildRustPackage {
+  name = "menstruation";
   src = ./.;
 
-  nativeBuildInputs = [ pkgconfig ] ++ lib.optional (builtins.currentSystem == "x86_64-darwin") darwin.apple_sdk.frameworks.Security;
+  buildInputs = [ pkgs.openssl ];
+  nativeBuildInputs = [ pkgs.pkg-config ];
 
-  preConfigure = "export HOME=$(mktemp -d)";
-
-  cargoSha256 = "0r1rj9pb0ln95g6266afr43nygfnh891mqyh7mzk4n4y45vb5dv3";
-
-  buildInputs = [ openssl ];
-
-  meta = with stdenv.lib; {
-    homepage = "https://github.com/kmein/menstruation.rs";
-    license = licenses.gpl3;
-    platforms = platforms.all;
-    maintainers = [ maintainers.kmein ];
-  };
+  cargoSha256 = "17x4c9sjbxpi81nrd9w1448mq6z8220hhar32vjq3d668n2842gh";
 }
