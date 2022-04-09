@@ -1,4 +1,4 @@
-{ pkgs ?  import <nixpkgs> }:
+{ pkgs ?  import <nixpkgs> {} }:
 let
   channel = import nix/rust-channel.nix;
 in pkgs.mkShell {
