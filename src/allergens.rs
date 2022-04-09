@@ -17,7 +17,7 @@ pub struct Allergen {
 impl TryFrom<Html> for Group<Allergen> {
     type Error = Error;
     fn try_from(html: Html) -> Result<Self, Self::Error> {
-        let group_selector = Selector::parse("div.col-sm-6 > ul > li").unwrap();
+        let group_selector = Selector::parse("div.col-sm-6 ul > li").unwrap();
         let number_name =
             Regex::new(r"(?P<number>\d+)(?P<index>\w?) - (?P<name>(\w|\s|[.()])+)").unwrap();
 
@@ -58,7 +58,7 @@ impl Display for Allergen {
 
 pub fn get() -> Result<Group<Allergen>, Error> {
     match Client::new()
-        .get("https://www.stw.berlin/mensen.html")
+        .get("https://web.archive.org/web/20220127092037/https://www.stw.berlin/mensen.html")
         .header(header::USER_AGENT, "Mozilla/5.0")
         .send()
     {
