@@ -97,7 +97,7 @@ impl TryFrom<ElementRef<'_>> for Mensa {
 
 pub fn get(pattern: Option<String>) -> Result<Response<Mensa>, Error> {
     match Client::new()
-        .get("https://web.archive.org/web/20220127092037/https://www.stw.berlin/mensen.html")
+        .get("https://web.archive.org/web/20191028235115/https://www.stw.berlin/mensen.html")
         .header(header::USER_AGENT, "Mozilla/5.0")
         .send()
     {
