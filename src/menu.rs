@@ -219,6 +219,22 @@ pub enum Tag {
     SustainableFishing,
     #[serde(rename = "climate friendly")]
     ClimateFriendly,
+    #[serde(rename = "H2O A")]
+    H2oA,
+    #[serde(rename = "H2O B")]
+    H2oB,
+    #[serde(rename = "H2O C")]
+    H2oC,
+    #[serde(rename = "H2O D")]
+    H2oD,
+    #[serde(rename = "CO2 A")]
+    Co2A,
+    #[serde(rename = "CO2 B")]
+    Co2B,
+    #[serde(rename = "CO2 C")]
+    Co2C,
+    #[serde(rename = "CO2 D")]
+    Co2D,
 }
 
 impl FromStr for Tag {
@@ -249,6 +265,14 @@ impl Display for Tag {
                 Tag::Organic => "organic",
                 Tag::SustainableFishing => "sustainable fishing",
                 Tag::ClimateFriendly => "climate friendly",
+                Tag::H2oA => "H2O A",
+                Tag::H2oB => "H2O B",
+                Tag::H2oC => "H2O C",
+                Tag::H2oD => "H2O D",
+                Tag::Co2A => "CO2 A",
+                Tag::Co2B => "CO2 B",
+                Tag::Co2C => "CO2 C",
+                Tag::Co2D => "CO2 D",
             })
         )
     }
@@ -262,7 +286,18 @@ impl Tag {
             "/vendor/infomax/mensen/icons/18.png" => Some(Tag::Organic),
             "/vendor/infomax/mensen/icons/38.png" => Some(Tag::SustainableFishing),
             "/vendor/infomax/mensen/icons/43.png" => Some(Tag::ClimateFriendly),
-            _ => None,
+            "/vendor/infomax/mensen/icons/H2O_bewertung_A.svg?v=2" => Some(Tag::H2oA),
+            "/vendor/infomax/mensen/icons/H2O_bewertung_B.svg?v=2" => Some(Tag::H2oB),
+            "/vendor/infomax/mensen/icons/H2O_bewertung_C.svg?v=2" => Some(Tag::H2oC),
+            "/vendor/infomax/mensen/icons/H2O_bewertung_D.svg?v=2" => Some(Tag::H2oD),
+            "/vendor/infomax/mensen/icons/CO2_bewertung_A.svg?v=2" => Some(Tag::Co2A),
+            "/vendor/infomax/mensen/icons/CO2_bewertung_B.svg?v=2" => Some(Tag::Co2B),
+            "/vendor/infomax/mensen/icons/CO2_bewertung_C.svg?v=2" => Some(Tag::Co2C),
+            "/vendor/infomax/mensen/icons/CO2_bewertung_D.svg?v=2" => Some(Tag::Co2D),
+            _ => {
+                eprintln!("unknown tag for image: {}", uri);
+                None
+            }
         }
     }
 }
