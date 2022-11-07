@@ -227,6 +227,8 @@ pub enum Tag {
     H2oC,
     #[serde(rename = "H2O D")]
     H2oD,
+    #[serde(rename = "H2O E")]
+    H2oE,
     #[serde(rename = "CO2 A")]
     Co2A,
     #[serde(rename = "CO2 B")]
@@ -235,6 +237,8 @@ pub enum Tag {
     Co2C,
     #[serde(rename = "CO2 D")]
     Co2D,
+    #[serde(rename = "CO2 E")]
+    Co2E,
 }
 
 impl FromStr for Tag {
@@ -269,10 +273,12 @@ impl Display for Tag {
                 Tag::H2oB => "H2O B",
                 Tag::H2oC => "H2O C",
                 Tag::H2oD => "H2O D",
+                Tag::H2oE => "H2O E",
                 Tag::Co2A => "CO2 A",
                 Tag::Co2B => "CO2 B",
                 Tag::Co2C => "CO2 C",
                 Tag::Co2D => "CO2 D",
+                Tag::Co2E => "CO2 E",
             })
         )
     }
@@ -290,10 +296,12 @@ impl Tag {
             "/vendor/infomax/mensen/icons/H2O_bewertung_B.svg?v=2" => Some(Tag::H2oB),
             "/vendor/infomax/mensen/icons/H2O_bewertung_C.svg?v=2" => Some(Tag::H2oC),
             "/vendor/infomax/mensen/icons/H2O_bewertung_D.svg?v=2" => Some(Tag::H2oD),
+            "/vendor/infomax/mensen/icons/H2O_bewertung_E.svg?v=2" => Some(Tag::H2oE),
             "/vendor/infomax/mensen/icons/CO2_bewertung_A.svg?v=2" => Some(Tag::Co2A),
             "/vendor/infomax/mensen/icons/CO2_bewertung_B.svg?v=2" => Some(Tag::Co2B),
             "/vendor/infomax/mensen/icons/CO2_bewertung_C.svg?v=2" => Some(Tag::Co2C),
             "/vendor/infomax/mensen/icons/CO2_bewertung_D.svg?v=2" => Some(Tag::Co2D),
+            "/vendor/infomax/mensen/icons/CO2_bewertung_E.svg?v=2" => Some(Tag::Co2E),
             _ => {
                 eprintln!("unknown tag for image: {}", uri);
                 None
