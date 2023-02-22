@@ -353,7 +353,7 @@ pub fn get(options: MenuOptions) -> Result<Response<Meal>, Error> {
                 "date",
                 &options
                     .date
-                    .unwrap_or_else(|| Local::today().naive_local())
+                    .unwrap_or_else(|| Local::now().date_naive())
                     .format("%Y-%m-%d")
                     .to_string(),
             ),

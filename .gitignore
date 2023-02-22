@@ -2,3 +2,4 @@
 **/*.rs.bk
 docker-compose.yml
 data
+result
