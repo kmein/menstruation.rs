@@ -2,39 +2,52 @@
   description = "Menstruation backend written in rust";
 
   inputs = {
-    rust-overlay.url = "github:oxalica/rust-overlay";
-    flake-utils.follows = "rust-overlay/flake-utils";
-    nixpkgs.follows = "rust-overlay/nixpkgs";
+    fenix.url = "github:nix-community/fenix";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = inputs: with inputs;
-    flake-utils.lib.eachDefaultSystem (system:
+  outputs =
+    inputs:
+    with inputs;
+    flake-utils.lib.eachDefaultSystem (
+      system:
       let
         pkgs = import nixpkgs {
           inherit system;
-          overlays = [
-            rust-overlay.overlays.default
-            (self: super: let myRust = self.rust-bin.nightly."2023-02-03"; in {
-                rustc = myRust.default;
-                cargo = myRust.default;
-            })
-          ];
+          overlays = [ fenix.overlays.default ];
         };
         rustPlatform = pkgs.makeRustPlatform {
-          rustc = pkgs.rustc;
-          cargo = pkgs.cargo;
+          rustc = pkgs.fenix.complete.withComponents [ "rustc" ];
+          cargo = pkgs.fenix.complete.withComponents [ "cargo" ];
         };
-      in {
+      in
+      {
         devShell = pkgs.mkShell {
-          buildInputs = [ pkgs.rustc pkgs.cargo pkgs.pkg-config pkgs.openssl ];
+          buildInputs = [
+            (pkgs.fenix.complete.withComponents [
+              "cargo"
+              "rustc"
+            ])
+            pkgs.pkg-config
+            pkgs.openssl
+          ];
         };
         defaultPackage = self.packages.${system}.menstruation-backend;
         packages.menstruation-backend = rustPlatform.buildRustPackage {
           pname = "menstruation";
           version = "0.1.0";
           src = ./.;
-          cargoSha256 = "sha256-CAxvNta6Jap9zciP6YN6ebcwhqRtd43PhoRJf/PtufQ=";
+          cargoLock = {
+            lockFile = builtins.path {
+              path = self + "/Cargo.lock";
+              name = "Cargo.lock";
+            };
+            allowBuiltinFetchGit = true;
+          };
+
           nativeBuildInputs = [ pkgs.pkg-config ];
+          buildInputs = [ pkgs.openssl ];
           PKG_CONFIG_PATH = "${pkgs.openssl.dev}/lib/pkgconfig";
           meta = with pkgs.lib; {
             homepage = "https://github.com/kmein/menstruation.rs";
@@ -44,5 +57,5 @@
           };
         };
       }
-  );
+    );
 }
