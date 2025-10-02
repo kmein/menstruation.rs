@@ -1,0 +1,352 @@
+[
+  {
+    "name": "Alice Salomon Hochschule Berlin",
+    "items": [
+      {
+        "code": 534,
+        "name": "Mensa ASH Berlin Hellersdorf",
+        "address": "Alice-Salomon-Platz 5, 12627 Berlin"
+      }
+    ]
+  },
+  {
+    "name": "Beuth Hochschule für Technik Berlin",
+    "items": [
+      {
+        "code": 535,
+        "name": "Mensa Beuth Hochschule für Technik Kurfürstenstraße",
+        "address": "Kurfürstenstraße 141, 10785 Berlin"
+      },
+      {
+        "code": 527,
+        "name": "Mensa Beuth Hochschule für Technik Luxemburger Straße",
+        "address": "Luxemburger Straße 9, 13353 Berlin"
+      }
+    ]
+  },
+  {
+    "name": "Charité - Universitätsmedizin Berlin",
+    "items": [
+      {
+        "code": 537,
+        "name": "Mensa Charité Zahnklinik",
+        "address": "Aßmannshauser Str. 2-6, 14197 Berlin"
+      },
+      {
+        "code": 367,
+        "name": "Mensa HU Süd",
+        "address": "Unter den Linden 6, 10117 Berlin"
+      }
+    ]
+  },
+  {
+    "name": "Code University",
+    "items": [
+      {
+        "code": 531,
+        "name": "Mensa HfM Charlottenstraße",
+        "address": "Charlottenstraße 55, 10117 Berlin"
+      },
+      {
+        "code": 320,
+        "name": "Mensa HTW Treskowallee",
+        "address": "Treskowallee 8, 10318 Berlin"
+      },
+      {
+        "code": 319,
+        "name": "Mensa HTW Wilhelminenhof",
+        "address": "Wilhelminenhofstraße 75 A, 12459 Berlin"
+      },
+      {
+        "code": 367,
+        "name": "Mensa HU Süd",
+        "address": "Unter den Linden 6, 10117 Berlin"
+      },
+      {
+        "code": 270,
+        "name": "Mensa HU Spandauer Straße",
+        "address": "Spandauer Straße 1, 10178 Berlin"
+      },
+      {
+        "code": 659,
+        "name": "Coffeebar HU „Jacob und Wilhelm Grimm Zentrum“",
+        "address": "Geschwister-Scholl-Str. 1, 10117 Berlin"
+      }
+    ]
+  },
+  {
+    "name": "Evangelische Hochschule Berlin",
+    "items": [
+      {
+        "code": 529,
+        "name": "Mensa EHB Teltower Damm",
+        "address": "Teltower Damm 118 - 122, 14167 Berlin"
+      }
+    ]
+  },
+  {
+    "name": "Freie Universität Berlin",
+    "items": [
+      {
+        "code": 271,
+        "name": "Mensa FU Herrenhaus Düppel",
+        "address": "Oertzenweg 19b, 14163 Berlin"
+      },
+      {
+        "code": 368,
+        "name": "Mensa FU Ihnestraße",
+        "address": "Ihnestraße 21, 14195 Berlin"
+      },
+      {
+        "code": 322,
+        "name": "Mensa FU II Otto-von-Simson-Straße",
+        "address": "Otto-von-Simson-Straße 26, 14195 Berlin"
+      },
+      {
+        "code": 660,
+        "name": "Mensa FU Koserstraße",
+        "address": "Koserstraße 20, 14195 Berlin"
+      },
+      {
+        "code": 528,
+        "name": "Mensa FU Lankwitz Malteserstraße",
+        "address": "Malteser Straße 74, 12249 Berlin"
+      },
+      {
+        "code": 542,
+        "name": "Mensa FU Pharmazie",
+        "address": "Königin-Luise-Str. 2, 14195 Berlin"
+      },
+      {
+        "code": 277,
+        "name": "Mensa FU Rechtswissenschaft",
+        "address": "Van't-Hoff-Str. 8, 14195 Berlin"
+      },
+      {
+        "code": 323,
+        "name": "Mensa Veggie № 1 – Die grüne Mensa",
+        "address": "Van't-Hoff-Str. 6, 14195 Berlin"
+      }
+    ]
+  },
+  {
+    "name": "Hertie School of Governance",
+    "items": [
+      {
+        "code": 531,
+        "name": "Mensa HfM Charlottenstraße",
+        "address": "Charlottenstraße 55, 10117 Berlin"
+      }
+    ]
+  },
+  {
+    "name": "Hochschule für Musik \"Hanns Eisler\" Berlin",
+    "items": [
+      {
+        "code": 723,
+        "name": "Mensa HfM „Neuer Marstall“",
+        "address": "Schlossplatz 7, 10718 Berlin"
+      },
+      {
+        "code": 531,
+        "name": "Mensa HfM Charlottenstraße",
+        "address": "Charlottenstraße 55, 10117 Berlin"
+      }
+    ]
+  },
+  {
+    "name": "Hochschule für Schauspielkunst \"Ernst Busch\" Berlin",
+    "items": [
+      {
+        "code": 533,
+        "name": "Mensa HfS \"Ernst Busch\"",
+        "address": "Zinnowitzer Straße 11, 10115 Berlin"
+      }
+    ]
+  },
+  {
+    "name": "Hochschule für Technik und Wirtschaft Berlin",
+    "items": [
+      {
+        "code": 320,
+        "name": "Mensa HTW Treskowallee",
+        "address": "Treskowallee 8, 10318 Berlin"
+      },
+      {
+        "code": 319,
+        "name": "Mensa HTW Wilhelminenhof",
+        "address": "Wilhelminenhofstraße 75 A, 12459 Berlin"
+      }
+    ]
+  },
+  {
+    "name": "Hochschule für Wirtschaft und Recht Berlin",
+    "items": [
+      {
+        "code": 526,
+        "name": "Mensa HWR Badensche Straße",
+        "address": "Badensche Str. 51, 10825 Berlin"
+      },
+      {
+        "code": 727,
+        "name": "Coffeebar HWR Alt-Friedrichsfelde",
+        "address": "Alt-Friedrichsfelde 60, 10315 Berlin"
+      }
+    ]
+  },
+  {
+    "name": "Hochschule für angewandte Pädagogik",
+    "items": [
+      {
+        "code": 319,
+        "name": "Mensa HTW Wilhelminenhof",
+        "address": "Wilhelminenhofstraße 75 A, 12459 Berlin"
+      }
+    ]
+  },
+  {
+    "name": "Humboldt-Universität zu Berlin",
+    "items": [
+      {
+        "code": 723,
+        "name": "Mensa HfM „Neuer Marstall“",
+        "address": "Schlossplatz 7, 10718 Berlin"
+      },
+      {
+        "code": 147,
+        "name": "Mensa HU Nord",
+        "address": "Hannoversche Straße 7, 10115 Berlin"
+      },
+      {
+        "code": 191,
+        "name": "Mensa HU Oase Adlershof",
+        "address": "Rudower Chaussee 25, 12489 Berlin"
+      },
+      {
+        "code": 367,
+        "name": "Mensa HU Süd",
+        "address": "Unter den Linden 6, 10117 Berlin"
+      },
+      {
+        "code": 270,
+        "name": "Mensa HU Spandauer Straße",
+        "address": "Spandauer Straße 1, 10178 Berlin"
+      },
+      {
+        "code": 659,
+        "name": "Coffeebar HU „Jacob und Wilhelm Grimm Zentrum“",
+        "address": "Geschwister-Scholl-Str. 1, 10117 Berlin"
+      }
+    ]
+  },
+  {
+    "name": "IUBH Internationale Hochschule",
+    "items": [
+      {
+        "code": 270,
+        "name": "Mensa HU Spandauer Straße",
+        "address": "Spandauer Straße 1, 10178 Berlin"
+      }
+    ]
+  },
+  {
+    "name": "Katholische Hochschule für Sozialwesen Berlin",
+    "items": [
+      {
+        "code": 532,
+        "name": "Mensa Katholische HS für Sozialwesen",
+        "address": "Köpenicker Allee 39 - 57, 10318 Berlin"
+      }
+    ]
+  },
+  {
+    "name": "Kunsthochschule Berlin-Weißensee",
+    "items": [
+      {
+        "code": 530,
+        "name": "Mensa KHS Weißensee",
+        "address": "Bühringstraße 20, 13086 Berlin"
+      }
+    ]
+  },
+  {
+    "name": "PFH Private Hochschule Göttingen",
+    "items": [
+      {
+        "code": 526,
+        "name": "Mensa HWR Badensche Straße",
+        "address": "Badensche Str. 51, 10825 Berlin"
+      }
+    ]
+  },
+  {
+    "name": "Technische Universität Berlin",
+    "items": [
+      {
+        "code": 539,
+        "name": "Mensa TU Ackerstraße",
+        "address": "Ackerstraße 71 - 76, 13355 Berlin"
+      },
+      {
+        "code": 540,
+        "name": "Mensa TU Architektur",
+        "address": "Straße des 17. Juni 152, 10623 Berlin"
+      },
+      {
+        "code": 657,
+        "name": "Mensa TU „Skyline“",
+        "address": "Ernst-Reuter-Platz 7, 10587 Berlin"
+      },
+      {
+        "code": 321,
+        "name": "Mensa TU Hardenbergstraße",
+        "address": "Hardenbergstraße 34, 10623 Berlin"
+      },
+      {
+        "code": 538,
+        "name": "Mensa TU Marchstraße",
+        "address": "Marchstraße 23, 10587 Berlin"
+      },
+      {
+        "code": 631,
+        "name": "Mensa Veggie 2.0 – Die tiefgrüne Mensa",
+        "address": "Hardenbergstraße 34, 10623 Berlin"
+      },
+      {
+        "code": 541,
+        "name": "Coffeebar der Mensa TU Hauptgebäude „Wetterleuchten“",
+        "address": "Straße des 17. Juni 135, 10623 Berlin"
+      }
+    ]
+  },
+  {
+    "name": "Universität der Künste Berlin",
+    "items": [
+      {
+        "code": 321,
+        "name": "Mensa TU Hardenbergstraße",
+        "address": "Hardenbergstraße 34, 10623 Berlin"
+      },
+      {
+        "code": 722,
+        "name": "Mensa UdK „Jazz-Mensa“",
+        "address": "Einsteinufer 43 - 53, 10587 Berlin"
+      },
+      {
+        "code": 658,
+        "name": "Mensa UdK Lietzenburger Straße",
+        "address": "Lietzenburger Straße 45, 10789 Berlin"
+      },
+      {
+        "code": 631,
+        "name": "Mensa Veggie 2.0 – Die tiefgrüne Mensa",
+        "address": "Hardenbergstraße 34, 10623 Berlin"
+      },
+      {
+        "code": 541,
+        "name": "Coffeebar der Mensa TU Hauptgebäude „Wetterleuchten“",
+        "address": "Straße des 17. Juni 135, 10623 Berlin"
+      }
+    ]
+  }
+]

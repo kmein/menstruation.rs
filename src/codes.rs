@@ -1,12 +1,13 @@
 use super::{error::Error, Group, MensaCode, Response};
 use ansi_term::{Color, Style};
 use regex::Regex;
-use reqwest::{header, blocking::Client};
 use scraper::{html::Html, ElementRef, Selector};
 use serde_derive::{Deserialize, Serialize};
 use std::convert::TryFrom;
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
+
+const CODES_DATA: &str = include_str!("../data/codes.json");
 
 impl TryFrom<Html> for Response<Mensa> {
     type Error = Error;
@@ -95,29 +96,57 @@ impl TryFrom<ElementRef<'_>> for Mensa {
     }
 }
 
+/// Filters the given `Response` by the given predicate, removing empty groups.
+///
+/// # Arguments
+/// * `predicate` - A function that takes a reference to an item and returns `true` if the item
+/// should be kept.
+/// * `response` - The `Response` to filter.
+///
+/// # Returns
+/// * A new `Response` containing only the items that match the predicate, with empty groups
+/// removed.
+pub fn filter_response<A>(predicate: impl Fn(&A) -> bool, response: Response<A>) -> Response<A> {
+    Response(
+        response
+            .0
+            .into_iter()
+            .map(|group| {
+                let items = group
+                    .items
+                    .into_iter()
+                    .filter(&predicate)
+                    .collect::<Vec<_>>();
+                Group {
+                    name: group.name,
+                    items,
+                }
+            })
+            .filter(|group| !group.items.is_empty())
+            .collect(),
+    )
+}
+
 pub fn get(pattern: Option<String>) -> Result<Response<Mensa>, Error> {
-    match Client::new()
-        .get("https://web.archive.org/web/20191028235115/https://www.stw.berlin/mensen.html")
-        .header(header::USER_AGENT, "Mozilla/5.0")
-        .send()
-    {
-        Ok(response) => {
-            assert!(response.status().is_success());
-            let content = response
-                .text()
-                .map_err(|e| Error::Net(format!("network response text not found\n< {}", e)))?;
-            Response::try_from(Html::parse_document(&content))
-                .map(|codes: Response<Mensa>| {
-                    if let Some(pattern) = pattern {
-                        codes.filter(|mensa| {
-                            mensa.name.to_lowercase().contains(&pattern.to_lowercase())
-                        })
-                    } else {
-                        codes
-                    }
-                })
-                .map_err(|e| Error::Parse(format!("Response<Mensa>\n< {}", e)))
-        }
-        Err(e) => Err(Error::Net(e.to_string())),
+    let codes = serde_json::from_str::<Response<Mensa>>(CODES_DATA)
+        .map_err(|e| Error::Parse(format!("Allergens\n< {}", e)))?;
+
+    if let Some(p) = &pattern {
+        return Ok(filter_response(
+            |mensa| {
+                let name_matches = mensa
+                    .name
+                    .to_lowercase()
+                    .contains(&p.to_lowercase());
+                let address_matches = mensa
+                    .address
+                    .to_lowercase()
+                    .contains(&p.to_lowercase());
+                name_matches || address_matches
+            },
+            codes,
+        ));
+    } else {
+        return Ok(codes);
     }
 }

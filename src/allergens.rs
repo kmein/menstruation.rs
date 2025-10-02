@@ -1,11 +1,12 @@
 use super::{error::Error, Group};
 use ansi_term::{Color, Style};
 use regex::Regex;
-use reqwest::{header, blocking::Client};
 use scraper::{Html, Selector};
 use serde_derive::{Deserialize, Serialize};
 use std::convert::TryFrom;
 use std::fmt::{Display, Formatter};
+
+const ALLERGENS_DATA: &str = include_str!("../data/allergens.json");
 
 #[derive(Serialize, Deserialize)]
 pub struct Allergen {
@@ -57,19 +58,6 @@ impl Display for Allergen {
 }
 
 pub fn get() -> Result<Group<Allergen>, Error> {
-    match Client::new()
-        .get("https://web.archive.org/web/20220127092037/https://www.stw.berlin/mensen.html")
-        .header(header::USER_AGENT, "Mozilla/5.0")
-        .send()
-    {
-        Ok(response) => {
-            assert!(response.status().is_success());
-            let content = response
-                .text()
-                .map_err(|e| Error::Net(format!("network response text not found\n< {}", e)))?;
-            Group::try_from(Html::parse_document(&content))
-                .map_err(|e| Error::Parse(format!("Group<Allergen>\n< {}", e)))
-        }
-        Err(e) => Err(Error::Net(e.to_string())),
-    }
+    serde_json::from_str::<Group<Allergen>>(ALLERGENS_DATA)
+        .map_err(|e| Error::Parse(format!("Allergens\n< {}", e)))
 }

@@ -1,0 +1,235 @@
+{
+  "name": "allergens",
+  "items": [
+    {
+      "name": "Schweinfleisch bzw. Gelatine vom Schwein",
+      "number": 2,
+      "index": null
+    },
+    {
+      "name": "Alkohol",
+      "number": 3,
+      "index": null
+    },
+    {
+      "name": "Geschmacksverstärker",
+      "number": 4,
+      "index": null
+    },
+    {
+      "name": "gewachst",
+      "number": 5,
+      "index": null
+    },
+    {
+      "name": "konserviert",
+      "number": 6,
+      "index": null
+    },
+    {
+      "name": "Antioxidationsmittel",
+      "number": 7,
+      "index": null
+    },
+    {
+      "name": "Farbstoff",
+      "number": 8,
+      "index": null
+    },
+    {
+      "name": "Phosphat",
+      "number": 9,
+      "index": null
+    },
+    {
+      "name": "geschwärzt",
+      "number": 10,
+      "index": null
+    },
+    {
+      "name": "enthält eine Phenylalaninquelle",
+      "number": 12,
+      "index": null
+    },
+    {
+      "name": "Süßungsmittel",
+      "number": 13,
+      "index": null
+    },
+    {
+      "name": "mit zum Teil fein zerkleinertem Fleischanteil",
+      "number": 14,
+      "index": null
+    },
+    {
+      "name": "koffeinhaltig",
+      "number": 16,
+      "index": null
+    },
+    {
+      "name": "chininhaltig",
+      "number": 17,
+      "index": null
+    },
+    {
+      "name": "geschwefelt",
+      "number": 19,
+      "index": null
+    },
+    {
+      "name": "kann abführend wirken",
+      "number": 20,
+      "index": null
+    },
+    {
+      "name": "Glutenhaltiges Getreide",
+      "number": 21,
+      "index": null
+    },
+    {
+      "name": "Weizen",
+      "number": 21,
+      "index": "a"
+    },
+    {
+      "name": "Roggen",
+      "number": 21,
+      "index": "b"
+    },
+    {
+      "name": "Gerste ",
+      "number": 21,
+      "index": "c"
+    },
+    {
+      "name": "Hafer",
+      "number": 21,
+      "index": "d"
+    },
+    {
+      "name": "Dinkel",
+      "number": 21,
+      "index": "e"
+    },
+    {
+      "name": "Kamut",
+      "number": 21,
+      "index": "f"
+    },
+    {
+      "name": "Krebstiere",
+      "number": 22,
+      "index": null
+    },
+    {
+      "name": "Eier",
+      "number": 23,
+      "index": null
+    },
+    {
+      "name": "Fisch",
+      "number": 24,
+      "index": null
+    },
+    {
+      "name": "Erdnüsse",
+      "number": 25,
+      "index": null
+    },
+    {
+      "name": "Schalenfrüchte",
+      "number": 26,
+      "index": null
+    },
+    {
+      "name": "Mandeln",
+      "number": 26,
+      "index": "a"
+    },
+    {
+      "name": "Haselnuss",
+      "number": 26,
+      "index": "b"
+    },
+    {
+      "name": "Walnuss",
+      "number": 26,
+      "index": "c"
+    },
+    {
+      "name": "Kaschunuss",
+      "number": 26,
+      "index": "d"
+    },
+    {
+      "name": "Pecanuss",
+      "number": 26,
+      "index": "e"
+    },
+    {
+      "name": "Paranuss",
+      "number": 26,
+      "index": "f"
+    },
+    {
+      "name": "Pistazie ",
+      "number": 26,
+      "index": "g"
+    },
+    {
+      "name": "Macadamia",
+      "number": 26,
+      "index": "h"
+    },
+    {
+      "name": "Sellerie",
+      "number": 27,
+      "index": null
+    },
+    {
+      "name": "Soja",
+      "number": 28,
+      "index": null
+    },
+    {
+      "name": "Senf",
+      "number": 29,
+      "index": null
+    },
+    {
+      "name": "Milch und Milchprodukte (inkl. Laktose)",
+      "number": 30,
+      "index": null
+    },
+    {
+      "name": "Sesam",
+      "number": 31,
+      "index": null
+    },
+    {
+      "name": "Schwefeldioxid und Sulfide",
+      "number": 32,
+      "index": null
+    },
+    {
+      "name": "Lupine",
+      "number": 33,
+      "index": null
+    },
+    {
+      "name": "Weichtiere",
+      "number": 34,
+      "index": null
+    },
+    {
+      "name": "Nitritpökelsalz",
+      "number": 35,
+      "index": null
+    },
+    {
+      "name": "Hefe",
+      "number": 36,
+      "index": null
+    }
+  ]
+}
