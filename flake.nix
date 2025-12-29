@@ -2,8 +2,9 @@
   description = "Menstruation backend written in rust";
 
   inputs = {
-    fenix.url = "github:nix-community/fenix";
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    fenix.url = "github:nix-community/fenix";
+    fenix.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs =
